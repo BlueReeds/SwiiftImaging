@@ -108,14 +108,14 @@
   .lead-row:first-child { border-top: none; padding-top: 0; }
   .lead-row:hover .org-name { text-decoration: underline; }
 
-  /* Tasks */
-  .task-list { list-style: none; margin: 0 0 10px; padding: 0; }
-  .task-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #EFEDE7; font-size: 14px; }
-  .task-item:first-child { border-top: none; padding-top: 0; }
-  .task-item.done .task-label { text-decoration: line-through; color: var(--faint); }
-  .task-checkbox { width: 16px; height: 16px; accent-color: var(--teal); cursor: pointer; flex-shrink: 0; }
-  .task-form { display: flex; gap: 8px; margin-top: 10px; }
-  .task-form input { flex: 1; font-family: inherit; font-size: 13px; padding: 7px 9px; border-radius: 6px; border: 1px solid var(--border); }
+  /* Actions à faire */
+  .action-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-top: 1px solid #EFEDE7; font-size: 14px; }
+  .action-row:first-child { border-top: none; padding-top: 0; }
+  .action-checkbox { width: 16px; height: 16px; accent-color: var(--teal); cursor: pointer; flex-shrink: 0; margin-top: 2px; }
+  .action-label { cursor: pointer; font-weight: 500; }
+  .action-label:hover { text-decoration: underline; }
+  .action-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .action-row.overdue .action-meta { color: var(--raspberry); }
 
   /* Campaigns */
   table.campaigns { width: 100%; border-collapse: collapse; font-size: 13.5px; }
@@ -196,11 +196,6 @@
 
   .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .empty-state { color: var(--faint); font-size: 13px; padding: 12px 0; font-family: "Inter", sans-serif; }
-
-  table.devices { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-  table.devices thead th { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--faint); font-weight: 500; padding-bottom: 8px; font-family: "Inter", sans-serif; }
-  table.devices td { padding: 10px 0; border-top: 1px solid #EFEDE7; }
-  table.devices td.serial { font-family: "IBM Plex Mono", ui-monospace, monospace; padding-right: 16px; }
 
   .timeline-list { list-style: none; margin: 0; padding: 0; }
   .timeline-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; padding: 10px 0; border-top: 1px solid #EFEDE7; }
@@ -344,8 +339,6 @@ const PROBLEMATIQUES = ["Désert médical", "Urgence", "Augmentation d'activité
 const LEAD_SOURCES = ["Page d'atterrissage", "Prospection LinkedIn", "Réseau", "Événements", "Formulaire liste d'attente", "Autre"];
 const CONTACT_ROLES = ["Décisionnaire", "Acheteur", "Échographiste", "Manipulateur", "Autre"];
 const INTERACTION_TYPES = ["Email", "Appel", "RDV qualification", "Démo", "Visite site", "Note"];
-const DEVICE_TYPES = ["Sonde abdominale", "Sonde cardiaque", "Boîtier de transmission", "Tablette"];
-const DEVICE_STATUSES = ["Déployé", "En stock", "En maintenance", "En panne"];
 const DISCOVERY_TYPES = ["RDV qualification", "Démo"];
 const WEEKS = 8;
 
@@ -376,20 +369,18 @@ const STATE = {
       comments: "Structure pilote très engagée, bon relais pour d'autres centres du département.",
       source: "Prospection LinkedIn", createdAt: daysAgo(70), isICP: true, loiSigned: true, loiValue: 18000,
       contacts: [
-        { id: "c1", name: "Dr. Anne Lefèvre", role: "Échographiste", email: "a.lefevre@cs-valdeloire.fr", phone: "02 54 00 00 01", notes: "Très à l'aise avec la sonde abdominale, demande une formation complémentaire sur la sonde cardiaque." },
-        { id: "c2", name: "Marc Thibault", role: "Manipulateur", email: "m.thibault@cs-valdeloire.fr", phone: "02 54 00 00 02", notes: "" },
-        { id: "c3", name: "Sophie Nguyen", role: "Décisionnaire", email: "s.nguyen@cs-valdeloire.fr", phone: "02 54 00 00 03", notes: "Responsable budget — point trimestriel à prévoir." },
-      ],
-      devices: [
-        { id: "d1", serial: "SND-2024-0147", type: "Sonde abdominale", status: "Déployé" },
-        { id: "d2", serial: "BOX-2024-0092", type: "Boîtier de transmission", status: "Déployé" },
-        { id: "d3", serial: "SND-2024-0148", type: "Sonde cardiaque", status: "En maintenance" },
+        { id: "c1", name: "Dr. Anne Lefèvre", role: "Échographiste", email: "a.lefevre@cs-valdeloire.fr", phone: "02 54 00 00 01", notes: "Très à l'aise avec la sonde abdominale, demande une formation complémentaire sur la sonde cardiaque.", photo: null, actions: [] },
+        { id: "c2", name: "Marc Thibault", role: "Manipulateur", email: "m.thibault@cs-valdeloire.fr", phone: "02 54 00 00 02", notes: "", photo: null, actions: [
+          { id: "a1", type: "Appel", label: "Relancer pour planifier la formation sonde cardiaque", date: daysAgo(-3), responsable: "Camille Rousseau", done: false },
+        ] },
+        { id: "c3", name: "Sophie Nguyen", role: "Décisionnaire", email: "s.nguyen@cs-valdeloire.fr", phone: "02 54 00 00 03", notes: "Responsable budget — point trimestriel à prévoir.", photo: null, actions: [
+          { id: "a2", type: "RDV qualification", label: "Point budgétaire trimestriel réalisé", date: daysAgo(5), responsable: "Camille Rousseau", done: true },
+        ] },
       ],
       interactions: [
         { id: "i1", date: daysAgo(1), type: "Note", label: "Échographie abdominale réalisée — Dr. Lefèvre" },
         { id: "i2", date: daysAgo(7), type: "Appel", label: "Signalement d'un flux vidéo instable, transmis à l'équipe technique" },
         { id: "i3", date: daysAgo(12), type: "Appel", label: "Appel de suivi post-déploiement" },
-        { id: "i4", date: daysAgo(25), type: "Note", label: "Sonde SND-2024-0147 assignée à Dr. Lefèvre" },
         { id: "i5", date: daysAgo(40), type: "Démo", label: "Démonstration sur site avant déploiement" },
       ],
     },
@@ -398,8 +389,9 @@ const STATE = {
       address: "1 rue de la République, 63200 Riom", email: "secretariat@ch-riom.fr", phone: "04 73 00 00 00",
       owner: "Camille Rousseau", stage: 2, interestLevel: "Moyen", problematiques: ["Augmentation d'activité"],
       comments: "", source: "Page d'atterrissage", createdAt: daysAgo(10), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c4", name: "Dr. Karim Belhadj", role: "Décisionnaire", email: "k.belhadj@ch-riom.fr", phone: "", notes: "" } ],
-      devices: [],
+      contacts: [ { id: "c4", name: "Dr. Karim Belhadj", role: "Décisionnaire", email: "k.belhadj@ch-riom.fr", phone: "", notes: "", photo: null, actions: [
+        { id: "a3", type: "Appel", label: "Relancer après le RDV de découverte", date: daysAgo(-2), responsable: "Camille Rousseau", done: false },
+      ] } ],
       interactions: [ { id: "i6", date: daysAgo(4), type: "RDV qualification", label: "Appel de découverte réalisé avec Dr. Belhadj" } ],
     },
     {
@@ -409,33 +401,34 @@ const STATE = {
       comments: "Client de référence — accepte volontiers de témoigner auprès d'autres cabinets.",
       source: "Réseau", createdAt: daysAgo(95), isICP: true, loiSigned: true, loiValue: 9000,
       contacts: [
-        { id: "c5", name: "Dr. Laura Petit", role: "Échographiste", email: "l.petit@cabinet3v.fr", phone: "", notes: "Réalise en moyenne 5 sessions/semaine." },
-        { id: "c6", name: "Yohan Reyes", role: "Manipulateur", email: "y.reyes@cabinet3v.fr", phone: "", notes: "" },
+        { id: "c5", name: "Dr. Laura Petit", role: "Échographiste", email: "l.petit@cabinet3v.fr", phone: "", notes: "Réalise en moyenne 5 sessions/semaine.", photo: null, actions: [] },
+        { id: "c6", name: "Yohan Reyes", role: "Manipulateur", email: "y.reyes@cabinet3v.fr", phone: "", notes: "", photo: null, actions: [] },
       ],
-      devices: [ { id: "d4", serial: "SND-2023-0061", type: "Sonde abdominale", status: "Déployé" }, { id: "d5", serial: "BOX-2023-0033", type: "Boîtier de transmission", status: "Déployé" } ],
       interactions: [ { id: "i7", date: daysAgo(1), type: "Note", label: "Échographie réalisée — Dr. Petit" }, { id: "i8", date: daysAgo(60), type: "Visite site", label: "Installation et formation initiale" } ],
     },
     {
       id: "4", name: "Clinique du Parc", type: "Clinique", address: "5 avenue Foch, 69003 Lyon",
       email: "", phone: "", owner: "Julien Kaced", stage: 0, interestLevel: "Faible", problematiques: [],
       comments: "", source: "Formulaire liste d'attente", createdAt: daysAgo(3), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c7", name: "Dr. Elsa Marchand", role: "Décisionnaire", email: "", phone: "", notes: "" } ],
-      devices: [], interactions: [ { id: "i9", date: daysAgo(3), type: "Note", label: "Lead créé via le formulaire liste d'attente" } ],
+      contacts: [ { id: "c7", name: "Dr. Elsa Marchand", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [] } ],
+      interactions: [ { id: "i9", date: daysAgo(3), type: "Note", label: "Lead créé via le formulaire liste d'attente" } ],
     },
     {
       id: "5", name: "Maison de Santé Nord Ardèche", type: "Autre", address: "8 rue du Temple, 07000 Privas",
       email: "", phone: "", owner: "Camille Rousseau", stage: 1, interestLevel: "Moyen", problematiques: ["Désert médical"],
       comments: "", source: "Événements", createdAt: daysAgo(18), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c8", name: "Nadia Fontaine", role: "Décisionnaire", email: "", phone: "", notes: "" } ],
-      devices: [], interactions: [ { id: "i10", date: daysAgo(9), type: "RDV qualification", label: "Échange téléphonique de qualification" } ],
+      contacts: [ { id: "c8", name: "Nadia Fontaine", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [] } ],
+      interactions: [ { id: "i10", date: daysAgo(9), type: "RDV qualification", label: "Échange téléphonique de qualification" } ],
     },
     {
       id: "6", name: "CHU de Grenoble — Service Imagerie", type: "CHU", address: "CS 10217, 38000 Grenoble",
       email: "", phone: "", owner: "Julien Kaced", stage: 3, interestLevel: "Élevé", problematiques: ["Augmentation d'activité"],
       comments: "Profil ICP fort — service très demandeur, décision attendue avant fin de trimestre.",
       source: "Prospection LinkedIn", createdAt: daysAgo(25), isICP: true, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c9", name: "Pr. Damien Roques", role: "Décisionnaire", email: "", phone: "", notes: "" } ],
-      devices: [], interactions: [
+      contacts: [ { id: "c9", name: "Pr. Damien Roques", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [
+        { id: "a4", type: "Email", label: "Envoyer le questionnaire ICP", date: daysAgo(2), responsable: "Julien Kaced", done: false },
+      ] } ],
+      interactions: [
         { id: "i11", date: daysAgo(15), type: "RDV qualification", label: "RDV de découverte avec la direction imagerie" },
         { id: "i12", date: daysAgo(25), type: "Note", label: "Lead créé via campagne LinkedIn" },
       ],
@@ -444,36 +437,31 @@ const STATE = {
       id: "7", name: "Cabinet Radiologie Sud", type: "Cabinet libéral", address: "22 cours Mirabeau, 13100 Aix-en-Provence",
       email: "", phone: "", owner: "Julien Kaced", stage: 1, interestLevel: "Faible", problematiques: [],
       comments: "", source: "Réseau", createdAt: daysAgo(45), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c10", name: "Dr. Farid Cheikh", role: "Décisionnaire", email: "", phone: "", notes: "" } ],
-      devices: [], interactions: [ { id: "i13", date: daysAgo(40), type: "Note", label: "Lead créé via recommandation" } ],
+      contacts: [ { id: "c10", name: "Dr. Farid Cheikh", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [] } ],
+      interactions: [ { id: "i13", date: daysAgo(40), type: "Note", label: "Lead créé via recommandation" } ],
     },
     {
       id: "8", name: "Centre Médical Littoral", type: "Clinique", address: "14 quai de la Fosse, 44000 Nantes",
       email: "", phone: "", owner: "Camille Rousseau", stage: 0, interestLevel: "Faible", problematiques: [],
       comments: "", source: "Page d'atterrissage", createdAt: daysAgo(2), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [], devices: [], interactions: [ { id: "i14", date: daysAgo(2), type: "Note", label: "Lead créé via la page d'atterrissage" } ],
+      contacts: [], interactions: [ { id: "i14", date: daysAgo(2), type: "Note", label: "Lead créé via la page d'atterrissage" } ],
     },
     {
       id: "9", name: "Polyclinique de l'Estuaire", type: "Clinique", address: "40 cours de l'Intendance, 33000 Bordeaux",
       email: "", phone: "", owner: "Camille Rousseau", stage: 0, interestLevel: "Moyen", problematiques: [],
       comments: "", source: "Formulaire liste d'attente", createdAt: daysAgo(6), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c11", name: "Dr. Hélène Vasseur", role: "Décisionnaire", email: "", phone: "", notes: "" } ],
-      devices: [], interactions: [ { id: "i15", date: daysAgo(6), type: "Note", label: "Inscription formulaire liste d'attente" } ],
+      contacts: [ { id: "c11", name: "Dr. Hélène Vasseur", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [
+        { id: "a5", type: "Appel", label: "Qualifier le besoin suite à l'inscription liste d'attente", date: daysAgo(-5), responsable: "Camille Rousseau", done: false },
+      ] } ],
+      interactions: [ { id: "i15", date: daysAgo(6), type: "Note", label: "Inscription formulaire liste d'attente" } ],
     },
     {
       id: "10", name: "Maison Médicale des Cévennes", type: "Autre", address: "2 rue Fresque, 30000 Nîmes",
       email: "", phone: "", owner: "Julien Kaced", stage: 1, interestLevel: "Moyen", problematiques: ["Désert médical"],
       comments: "", source: "Événements", createdAt: daysAgo(30), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c12", name: "Dr. Paul Serrurier", role: "Décisionnaire", email: "", phone: "", notes: "" } ],
-      devices: [], interactions: [ { id: "i16", date: daysAgo(28), type: "Note", label: "Rencontré au salon SantExpo" } ],
+      contacts: [ { id: "c12", name: "Dr. Paul Serrurier", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [] } ],
+      interactions: [ { id: "i16", date: daysAgo(28), type: "Note", label: "Rencontré au salon SantExpo" } ],
     },
-  ],
-  waitlist: Array.from({ length: 21 }, (_, i) => ({ id: "w" + i, name: "Inscrit " + (i + 1), email: `contact${i + 1}@exemple.fr`, date: daysAgo(Math.floor((i / 21) * 75) + Math.floor(Math.random() * 4)) })),
-  tasks: [
-    { id: "t1", label: "Relancer Dr. Belhadj (Riom) après le RDV de découverte", done: false, dueDate: toInputDate(new Date()) },
-    { id: "t2", label: "Envoyer le questionnaire ICP à la Polyclinique de l'Estuaire", done: false, dueDate: toInputDate(new Date()) },
-    { id: "t3", label: "Préparer le compte-rendu du RDV CHU Grenoble", done: true, dueDate: toInputDate(daysAgo(1)) },
-    { id: "t4", label: "Publier le post LinkedIn de prospection hebdomadaire", done: false, dueDate: toInputDate(new Date()) },
   ],
   campaigns: [
     { id: "cp1", name: "Séquence prospection LinkedIn — radiologues", sent: 180, opened: 97, replied: 14 },
@@ -494,6 +482,12 @@ const STATE = {
 function getOrg(id) { return STATE.organizations.find(o => o.id === id); }
 function getContact(org, cid) { return org.contacts.find(c => c.id === cid); }
 function getInteraction(org, iid) { return org.interactions.find(i => i.id === iid); }
+function getAction(contact, aid) { return contact.actions.find(a => a.id === aid); }
+function findContactOwner(cid) {
+  for (const o of STATE.organizations) { const c = getContact(o, cid); if (c) return o; }
+  return null;
+}
+function isOverdue(a) { return !a.done && daysBetween(a.date, new Date()) > 0; }
 function fmtDate(d) { return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }); }
 function icon(paths, size) { size = size || 14; return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`; }
 function options(list, selected) { return list.map(v => `<option value="${v}" ${v === selected ? "selected" : ""}>${v}</option>`).join(""); }
@@ -610,6 +604,10 @@ function renderHome() {
   const rdv30j = orgs.flatMap(o => o.interactions).filter(it => DISCOVERY_TYPES.includes(it.type) && daysBetween(it.date, now) >= 0 && daysBetween(it.date, now) <= 30).length;
   const allInteractions = orgs.flatMap(o => o.interactions.map(it => ({ ...it, orgName: o.name, orgId: o.id }))).sort((a, b) => b.date - a.date).slice(0, 6);
 
+  // --- Actions à faire (récapitulatif) ---
+  const allActions = orgs.flatMap(o => o.contacts.flatMap(c => c.actions.map(a => ({ ...a, contactId: c.id, contactName: c.name, orgId: o.id, orgName: o.name }))));
+  const pendingActions = allActions.filter(a => !a.done).sort((a, b) => a.date - b.date);
+
   // --- Engagements ---
   const loiOrgs = orgs.filter(o => o.loiSigned);
   const loiTotal = loiOrgs.reduce((s, o) => s + (o.loiValue || 0), 0);
@@ -653,30 +651,15 @@ function renderHome() {
     </div>
 
     <div class="section-title">Traction &amp; prospection <span class="hint">volume de leads</span></div>
-    <div class="two-col">
-      <div class="card">
-        <div class="card-title">Répartition par source (lead origin)</div>
-        ${sourceCounts.map(s => `
-          <div class="funnel-row">
-            <div class="funnel-label">${s.label}</div>
-            <div class="funnel-track"><div class="funnel-fill" style="width:${(s.count / maxSource) * 100}%; background:var(--teal);"></div></div>
-            <div class="funnel-count">${s.count}</div>
-          </div>
-        `).join("")}
-      </div>
-      <div class="card">
-        <div class="section-head" style="margin-bottom:10px;">
-          <div class="card-title" style="margin:0;">Liste d'attente / Beta</div>
-          <button class="btn btn-ghost btn-sm" data-action="open-add-waitlist">${icon(ICONS.plus, 14)}</button>
+    <div class="card">
+      <div class="card-title">Répartition par source (lead origin)</div>
+      ${sourceCounts.map(s => `
+        <div class="funnel-row">
+          <div class="funnel-label">${s.label}</div>
+          <div class="funnel-track"><div class="funnel-fill" style="width:${(s.count / maxSource) * 100}%; background:var(--teal);"></div></div>
+          <div class="funnel-count">${s.count}</div>
         </div>
-        <div class="kpi-value" style="font-size:38px;">${STATE.waitlist.length}</div>
-        <div class="kpi-foot" style="margin-top:2px;">inscrits au total avant lancement</div>
-        <div style="margin-top:14px;">
-          ${[...STATE.waitlist].sort((a, b) => b.date - a.date).slice(0, 4).map(w => `
-            <div class="activity-row"><span class="activity-date">${fmtDate(w.date)}</span><span>${escapeHtml(w.name)} <span class="activity-org">— ${escapeHtml(w.email)}</span></span></div>
-          `).join("")}
-        </div>
-      </div>
+      `).join("")}
     </div>
 
     <div class="section-title">Funnel de qualification <span class="hint">taux de conversion par étape</span></div>
@@ -703,19 +686,16 @@ function renderHome() {
         `).join("") : `<div class="empty-state">Aucune activité enregistrée.</div>`}
       </div>
       <div class="card">
-        <div class="card-title">Tâches du jour</div>
-        <ul class="task-list">
-          ${STATE.tasks.map(t => `
-            <li class="task-item ${t.done ? "done" : ""}">
-              <input type="checkbox" class="task-checkbox" ${t.done ? "checked" : ""} onchange="toggleTask('${t.id}')" />
-              <span class="task-label">${escapeHtml(t.label)}</span>
-            </li>
-          `).join("")}
-        </ul>
-        <form class="task-form" onsubmit="submitAddTask(event)">
-          <input type="text" placeholder="Nouvelle tâche…" required />
-          <button class="btn btn-secondary btn-sm" type="submit">Ajouter</button>
-        </form>
+        <div class="card-title">Actions à faire <span class="hint" style="font-weight:400;">${pendingActions.length} en attente</span></div>
+        ${pendingActions.length ? pendingActions.slice(0, 8).map(a => `
+          <div class="action-row ${isOverdue(a) ? "overdue" : ""}">
+            <input type="checkbox" class="action-checkbox" onchange="toggleContactAction('${a.orgId}','${a.contactId}','${a.id}')" />
+            <div>
+              <div class="action-label" data-action="view-contact" data-id="${a.orgId}" data-cid="${a.contactId}">${escapeHtml(a.label)}</div>
+              <div class="action-meta">${escapeHtml(a.contactName)} · ${escapeHtml(a.orgName)} · ${fmtDate(a.date)}${isOverdue(a) ? " (en retard)" : ""}${a.responsable ? " · " + escapeHtml(a.responsable) : ""}</div>
+            </div>
+          </div>
+        `).join("") : `<div class="empty-state">Aucune action en attente — tout est à jour.</div>`}
       </div>
     </div>
 
@@ -870,7 +850,6 @@ function renderDetail(id, tab) {
 
   const tabs = [
     { id: "commercial", label: "Commercial", icon: ICONS.trend },
-    { id: "materiel", label: "Parc matériel", icon: ICONS.device },
     { id: "journal", label: "Journal", icon: ICONS.journal },
   ];
   const tabsHtml = tabs.map(t => `
@@ -878,35 +857,22 @@ function renderDetail(id, tab) {
       ${icon(t.icon, 15)}${t.label}
     </button>`).join("");
 
-  const sortedInteractions = [...org.interactions].sort((a, b) => b.date - a.date);
+  // Historique global = interactions de l'organisation + actions de tous ses contacts
+  const combined = [
+    ...org.interactions.map(it => ({ ...it })),
+    ...org.contacts.flatMap(c => c.actions.map(a => ({ id: a.id, date: a.date, type: a.type, done: a.done, label: `${a.label} — ${c.name}`, _contactId: c.id }))),
+  ];
+  const sortedInteractions = [...combined].sort((a, b) => b.date - a.date);
 
   let panel = "";
   if (tab === "commercial") {
     panel = `
       <div class="section-head">
         <h3 style="font-size:16px;">Historique des interactions</h3>
-        <button class="btn btn-secondary btn-sm" data-action="open-add-action" data-id="${org.id}">${icon(ICONS.plus, 13)} Ajouter une action</button>
+        <button class="btn btn-secondary btn-sm" data-action="open-add-action" data-id="${org.id}">${icon(ICONS.plus, 13)} Ajouter une note</button>
       </div>
-      ${renderTimeline(org)}
-    `;
-  } else if (tab === "materiel") {
-    panel = `
-      <div class="section-head">
-        <h3 style="font-size:16px;">Parc matériel assigné</h3>
-        <button class="btn btn-secondary btn-sm" data-action="open-add-device" data-id="${org.id}">${icon(ICONS.plus, 13)} Ajouter un équipement</button>
-      </div>
-      ${org.devices.length ? `
-      <div style="overflow-x:auto;">
-        <table class="devices">
-          <thead><tr><th>N° de série</th><th>Équipement</th><th>Statut</th></tr></thead>
-          <tbody>
-            ${org.devices.map(d => {
-              const c = d.status === "Déployé" ? "#11EA90" : d.status === "En stock" ? "#8F9B94" : "#C1121F";
-              return `<tr><td class="serial">${d.serial}</td><td>${d.type}</td><td><span class="pill" style="${pillStyle(c)}">${d.status}</span></td></tr>`;
-            }).join("")}
-          </tbody>
-        </table>
-      </div>` : `<div class="empty-state">Aucun équipement assigné.</div>`}
+      <div class="map-caption" style="margin-bottom:12px;">Centralise les notes de l'organisation et les actions de tous ses contacts — en rouge, ce qui reste à faire.</div>
+      ${renderTimeline(combined, "org-" + org.id, (ev) => ev._contactId ? `openEditContactAction('${org.id}','${ev._contactId}','${ev.id}')` : `openEditActionModal('${org.id}','${ev.id}')`)}
     `;
   } else if (tab === "journal") {
     panel = `
@@ -916,8 +882,8 @@ function renderDetail(id, tab) {
       </div>
       <ul class="timeline-list">
         ${sortedInteractions.map(it => `
-          <li><span class="date">${fmtDate(it.date)}</span><span class="type-tag">${it.type}</span><span class="flex-label">${it.label}</span>
-            <button class="edit-icon-btn" data-action="open-edit-action" data-id="${org.id}" data-iid="${it.id}" title="Modifier">${icon(ICONS.edit, 13)}</button>
+          <li><span class="date">${fmtDate(it.date)}</span><span class="type-tag" ${it.done === false ? `style="background:rgba(193,18,31,.1);color:var(--raspberry);"` : ""}>${it.done === false ? "À faire · " : ""}${it.type}</span><span class="flex-label">${it.label}</span>
+            <button class="edit-icon-btn" data-action="${it._contactId ? "open-edit-contact-action" : "open-edit-action"}" data-id="${org.id}" ${it._contactId ? `data-cid="${it._contactId}"` : ""} data-iid="${it.id}" title="Modifier">${icon(ICONS.edit, 13)}</button>
           </li>
         `).join("")}
       </ul>
@@ -974,7 +940,7 @@ function renderDetail(id, tab) {
           ${org.contacts.length ? org.contacts.map(c => `
             <div class="contact-item">
               <div class="contact-row">
-                <span class="contact-name">${c.name}</span>
+                <span class="contact-name" style="cursor:pointer;" data-action="view-contact" data-id="${org.id}" data-cid="${c.id}">${c.name}${c.photo ? ` ${icon(ICONS.camera, 11)}` : ""}${c.actions.filter(a => !a.done).length ? ` <span class="tag-pill" style="background:rgba(193,18,31,.1);color:var(--raspberry);">${c.actions.filter(a => !a.done).length} à faire</span>` : ""}</span>
                 <button class="edit-icon-btn" data-action="open-edit-contact" data-id="${org.id}" data-cid="${c.id}" title="Modifier">${icon(ICONS.edit, 13)}</button>
               </div>
               <div class="contact-role">${c.role}${c.email ? " · " + c.email : ""}${c.phone ? " · " + c.phone : ""}</div>
@@ -993,16 +959,94 @@ function renderDetail(id, tab) {
 }
 
 /* =========================================================================
+   RENDER — FICHE CONTACT (détaillée, sur le modèle de la fiche organisation)
+   ========================================================================= */
+
+function renderContactDetail(orgId, cid) {
+  const org = getOrg(orgId);
+  if (!org) return `<div class="empty-state">Organisation introuvable.</div>`;
+  const c = getContact(org, cid);
+  if (!c) return `<div class="empty-state">Contact introuvable.</div>`;
+
+  const sorted = [...c.actions].sort((a, b) => b.date - a.date);
+  const pendingCount = c.actions.filter(a => !a.done).length;
+
+  return `
+    <button class="back-link" data-action="view-org" data-id="${org.id}">${icon(ICONS.back, 14)} Retour à ${org.name}</button>
+
+    <header>
+      <div class="header-top">
+        <div class="header-id">
+          <div class="header-icon">${icon('<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/>', 20)}</div>
+          <div>
+            <div class="org-title-row">
+              <h1 class="org-title">${c.name}</h1>
+              <button class="edit-icon-btn" data-action="open-edit-contact" data-id="${org.id}" data-cid="${c.id}" title="Modifier le contact">${icon(ICONS.edit, 15)}</button>
+            </div>
+            <div class="meta">
+              <span class="pill" style="${pillStyle("#8F9B94")}">${c.role}</span>
+              ${pendingCount ? `<span class="pill" style="${pillStyle("#C1121F")}">${pendingCount} action${pendingCount > 1 ? "s" : ""} à faire</span>` : ""}
+              <span class="dot">${org.name}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside>
+        <section class="card">
+          <p class="card-title">Informations</p>
+          ${c.photo ? `<div class="scan-thumb"><img src="${c.photo}" alt="Carte de visite" /></div>` : ""}
+          <dl class="info-list">
+            <div class="row"><dt>Email</dt><dd>${c.email || "—"}</dd></div>
+            <div class="row"><dt>Téléphone</dt><dd>${c.phone || "—"}</dd></div>
+            <div class="row"><dt>Organisation</dt><dd><a data-action="view-org" data-id="${org.id}" style="color:var(--teal-dark);cursor:pointer;">${org.name}</a></dd></div>
+            ${c.notes ? `<div class="row"><dt>Commentaires</dt><dd>${escapeHtml(c.notes)}</dd></div>` : ""}
+          </dl>
+        </section>
+      </aside>
+
+      <main>
+        <section class="card" style="margin-top:0;">
+          <div class="section-head">
+            <h3 style="font-size:16px;">Actions</h3>
+            <button class="btn btn-secondary btn-sm" data-action="open-add-contact-action" data-id="${org.id}" data-cid="${c.id}">${icon(ICONS.plus, 13)} Ajouter une action</button>
+          </div>
+          <div class="map-caption" style="margin-bottom:12px;">Chaque action peut avoir une date limite et un responsable — elle remonte automatiquement dans l'historique de ${org.name}.</div>
+          ${c.actions.length ? renderTimeline(c.actions, "contact-" + c.id, (a) => `openEditContactAction('${org.id}','${c.id}','${a.id}')`) : `<div class="empty-state">Aucune action enregistrée pour ce contact.</div>`}
+
+          ${sorted.length ? `
+            <div class="card-title" style="margin-top:22px;">Liste</div>
+            <ul class="timeline-list">
+              ${sorted.map(a => `
+                <li>
+                  <span class="date">${fmtDate(a.date)}</span>
+                  <span class="type-tag" ${!a.done ? `style="background:rgba(193,18,31,.1);color:var(--raspberry);"` : ""}>${!a.done ? "À faire · " : ""}${a.type}</span>
+                  <span class="flex-label">${escapeHtml(a.label)}${a.responsable ? ` <span style="color:var(--faint);">— ${escapeHtml(a.responsable)}</span>` : ""}</span>
+                  <input type="checkbox" class="action-checkbox" ${a.done ? "checked" : ""} onchange="toggleContactAction('${org.id}','${c.id}','${a.id}')" />
+                  <button class="edit-icon-btn" data-action="open-edit-contact-action" data-id="${org.id}" data-cid="${c.id}" data-iid="${a.id}" title="Modifier">${icon(ICONS.edit, 13)}</button>
+                </li>
+              `).join("")}
+            </ul>
+          ` : ""}
+        </section>
+      </main>
+    </div>
+  `;
+}
+
+/* =========================================================================
    TIMELINE INTERACTIVE (glisser + zoom + édition)
    ========================================================================= */
 
 const TIMELINE_STATE = {};
 function getTimelineState(orgId) { if (!TIMELINE_STATE[orgId]) TIMELINE_STATE[orgId] = { scale: 34, offset: 0 }; return TIMELINE_STATE[orgId]; }
 
-function renderTimeline(org) {
-  const events = [...org.interactions].sort((a, b) => a.date - b.date);
+function renderTimeline(items, keyId, editCallFn) {
+  const events = [...items].sort((a, b) => a.date - b.date);
   if (!events.length) return `<div class="empty-state">Aucune interaction enregistrée.</div>`;
-  const ts = getTimelineState(org.id);
+  const ts = getTimelineState(keyId);
 
   const minDate = new Date(events[0].date); minDate.setDate(minDate.getDate() - 3);
   const maxDate = new Date(events[events.length - 1].date); maxDate.setDate(maxDate.getDate() + 3);
@@ -1019,14 +1063,17 @@ function renderTimeline(org) {
   const eventsHtml = events.map((ev, i) => {
     const x = daysBetween(minDate, ev.date) * ts.scale;
     const above = i % 2 === 0;
+    const pending = ev.done === false;
+    const dotColor = pending ? "var(--raspberry)" : "var(--teal)";
+    const editCall = editCallFn ? editCallFn(ev) : null;
     return `
       <div class="tl-event" style="left:${x}px;">
-        <div class="tl-dot"></div>
+        <div class="tl-dot" style="background:${dotColor};box-shadow:0 0 0 1px ${dotColor};"></div>
         <div class="tl-stem ${above ? "stem-up" : "stem-down"}"></div>
         <div class="tl-card ${above ? "above" : "below"}" title="${escapeHtml(ev.label)}">
-          <button class="tl-edit-btn" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation(); openEditActionModal('${org.id}','${ev.id}')">${icon(ICONS.edit, 11)}</button>
+          ${editCall ? `<button class="tl-edit-btn" onpointerdown="event.stopPropagation()" onclick="event.stopPropagation(); ${editCall}">${icon(ICONS.edit, 11)}</button>` : ""}
           <div class="tl-date">${fmtDate(ev.date)}</div>
-          <span class="tl-type">${ev.type}</span>
+          <span class="tl-type" ${pending ? `style="background:rgba(193,18,31,.13);color:var(--raspberry);"` : ""}>${pending ? "À faire · " : ""}${ev.type}</span>
           <div class="tl-label">${escapeHtml(ev.label)}</div>
         </div>
       </div>`;
@@ -1036,13 +1083,13 @@ function renderTimeline(org) {
 
   return `
     <div class="tl-toolbar">
-      <button class="btn btn-secondary btn-sm" onclick="zoomTimeline('${org.id}',0.7)">−</button>
-      <button class="btn btn-secondary btn-sm" onclick="zoomTimeline('${org.id}',1.4)">+</button>
-      <button class="btn btn-ghost btn-sm" onclick="resetTimeline('${org.id}')">Réinitialiser</button>
+      <button class="btn btn-secondary btn-sm" onclick="zoomTimeline('${keyId}',0.7)">−</button>
+      <button class="btn btn-secondary btn-sm" onclick="zoomTimeline('${keyId}',1.4)">+</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetTimeline('${keyId}')">Réinitialiser</button>
       <span class="tl-hint">Glisser pour naviguer</span>
     </div>
-    <div class="tl-viewport" id="tl-viewport-${org.id}">
-      <div class="tl-track" id="tl-track-${org.id}" style="width:${trackWidth}px; transform:translateX(${ts.offset}px);">
+    <div class="tl-viewport" id="tl-viewport-${keyId}">
+      <div class="tl-track" id="tl-track-${keyId}" style="width:${trackWidth}px; transform:translateX(${ts.offset}px);">
         <div class="tl-axis"></div>
         ${ticksHtml}
         ${eventsHtml}
@@ -1051,7 +1098,7 @@ function renderTimeline(org) {
   `;
 }
 
-function zoomTimeline(orgId, factor) { const ts = getTimelineState(orgId); ts.scale = Math.min(160, Math.max(10, Math.round(ts.scale * factor))); ts.offset = 0; render(); }
+function zoomTimeline(keyId, factor) { const ts = getTimelineState(keyId); ts.scale = Math.min(160, Math.max(10, Math.round(ts.scale * factor))); ts.offset = 0; render(); }
 function resetTimeline(orgId) { TIMELINE_STATE[orgId] = { scale: 34, offset: 0 }; render(); }
 
 function setupTimelineDrag(orgId) {
@@ -1206,7 +1253,7 @@ function openAddContactModal(orgId) {
 function submitAddContact(e, orgId) {
   e.preventDefault();
   const f = e.target, org = getOrg(orgId);
-  org.contacts.push({ id: nextId(), name: f.name.value.trim(), role: f.role.value, email: f.email.value.trim(), phone: f.phone.value.trim(), notes: f.notes.value.trim() });
+  org.contacts.push({ id: nextId(), name: f.name.value.trim(), role: f.role.value, email: f.email.value.trim(), phone: f.phone.value.trim(), notes: f.notes.value.trim(), photo: null, actions: [] });
   closeModal(); render();
 }
 
@@ -1242,8 +1289,8 @@ function submitEditContact(e, orgId, cid) {
 
 function openAddActionModal(orgId) {
   openModal(`
-    <h2>Ajouter une action</h2>
-    <div class="modal-sub">Enregistrée dans l'historique commercial et le journal d'audit.</div>
+    <h2>Ajouter une note</h2>
+    <div class="modal-sub">Note générale sur l'organisation, non rattachée à un contact précis — enregistrée dans l'historique et le journal d'audit.</div>
     <form onsubmit="submitAddAction(event, '${orgId}')">
       <div class="field-row">
         <div class="field"><label>Type</label><select name="type">${options(INTERACTION_TYPES)}</select></div>
@@ -1267,7 +1314,7 @@ function submitAddAction(e, orgId) {
 function openEditActionModal(orgId, iid) {
   const org = getOrg(orgId), it = getInteraction(org, iid);
   openModal(`
-    <h2>Modifier l'action</h2>
+    <h2>Modifier la note</h2>
     <form onsubmit="submitEditAction(event, '${orgId}', '${iid}')">
       <div class="field-row">
         <div class="field"><label>Type</label><select name="type">${options(INTERACTION_TYPES, it.type)}</select></div>
@@ -1290,56 +1337,66 @@ function submitEditAction(e, orgId, iid) {
   closeModal(); render();
 }
 
-function openAddDeviceModal(orgId) {
+/* ---- Actions au niveau Contact (avec deadline + responsable) ---- */
+
+function openAddContactActionModal(orgId, cid) {
   openModal(`
-    <h2>Ajouter un équipement</h2>
-    <form onsubmit="submitAddDevice(event, '${orgId}')">
-      <div class="field"><label>N° de série</label><input name="serial" required placeholder="Ex. SND-2026-0001" /></div>
+    <h2>Ajouter une action</h2>
+    <div class="modal-sub">Visible sur la fiche du contact et remontée dans l'historique de l'organisation.</div>
+    <form onsubmit="submitAddContactAction(event, '${orgId}', '${cid}')">
       <div class="field-row">
-        <div class="field"><label>Type</label><select name="type">${options(DEVICE_TYPES)}</select></div>
-        <div class="field"><label>Statut</label><select name="status">${options(DEVICE_STATUSES)}</select></div>
+        <div class="field"><label>Type</label><select name="type">${options(INTERACTION_TYPES)}</select></div>
+        <div class="field"><label>Date limite / réalisation</label><input name="date" type="date" value="${toInputDate(new Date())}" required /></div>
       </div>
+      <div class="field"><label>Description</label><textarea name="label" required placeholder="Ex. Relancer après l'envoi du devis..."></textarea></div>
+      <div class="field"><label>Responsable</label><input name="responsable" placeholder="Ex. Camille Rousseau" /></div>
+      <label class="checkbox-item" style="width:100%;margin-bottom:6px;"><input type="checkbox" name="done" /> Déjà réalisée (sinon : action à faire, avec la date ci-dessus comme échéance)</label>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
-        <button type="submit" class="btn btn-primary">Ajouter</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
       </div>
     </form>
   `);
 }
-function submitAddDevice(e, orgId) {
+function submitAddContactAction(e, orgId, cid) {
   e.preventDefault();
-  const f = e.target, org = getOrg(orgId);
-  org.devices.push({ id: nextId(), serial: f.serial.value.trim(), type: f.type.value, status: f.status.value });
-  org.interactions.unshift({ id: nextId(), date: new Date(), type: "Note", label: `${f.type.value} (${f.serial.value.trim()}) ajouté au parc` });
+  const f = e.target, fd = new FormData(f), org = getOrg(orgId), c = getContact(org, cid);
+  c.actions.unshift({ id: nextId(), type: f.type.value, label: f.label.value.trim(), date: fromInputDate(f.date.value), responsable: f.responsable.value.trim(), done: fd.get("done") === "on" });
   closeModal(); render();
 }
 
-function openAddWaitlistModal() {
+function openEditContactAction(orgId, cid, aid) {
+  const org = getOrg(orgId), c = getContact(org, cid), a = getAction(c, aid);
   openModal(`
-    <h2>Ajouter un inscrit</h2>
-    <div class="modal-sub">Liste d'attente / accès Beta.</div>
-    <form onsubmit="submitAddWaitlist(event)">
-      <div class="field"><label>Nom</label><input name="name" required placeholder="Ex. Dr. Julie Marin" /></div>
-      <div class="field"><label>Email</label><input name="email" type="email" required placeholder="prenom.nom@structure.fr" /></div>
+    <h2>Modifier l'action</h2>
+    <form onsubmit="submitEditContactAction(event, '${orgId}', '${cid}', '${aid}')">
+      <div class="field-row">
+        <div class="field"><label>Type</label><select name="type">${options(INTERACTION_TYPES, a.type)}</select></div>
+        <div class="field"><label>Date limite / réalisation</label><input name="date" type="date" value="${toInputDate(a.date)}" required /></div>
+      </div>
+      <div class="field"><label>Description</label><textarea name="label" required>${escapeHtml(a.label)}</textarea></div>
+      <div class="field"><label>Responsable</label><input name="responsable" value="${escapeHtml(a.responsable || "")}" /></div>
+      <label class="checkbox-item" style="width:100%;margin-bottom:6px;"><input type="checkbox" name="done" ${a.done ? "checked" : ""} /> Réalisée</label>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
-        <button type="submit" class="btn btn-primary">Ajouter</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
       </div>
     </form>
   `);
 }
-function submitAddWaitlist(e) {
+function submitEditContactAction(e, orgId, cid, aid) {
   e.preventDefault();
-  const f = e.target;
-  STATE.waitlist.unshift({ id: nextId(), name: f.name.value.trim(), email: f.email.value.trim(), date: new Date() });
+  const f = e.target, fd = new FormData(f), org = getOrg(orgId), c = getContact(org, cid), a = getAction(c, aid);
+  a.type = f.type.value;
+  a.date = fromInputDate(f.date.value);
+  a.label = f.label.value.trim();
+  a.responsable = f.responsable.value.trim();
+  a.done = fd.get("done") === "on";
   closeModal(); render();
 }
-
-function toggleTask(id) { const t = STATE.tasks.find(t => t.id === id); if (t) t.done = !t.done; render(); }
-function submitAddTask(e) {
-  e.preventDefault();
-  const input = e.target.querySelector("input");
-  STATE.tasks.unshift({ id: nextId(), label: input.value.trim(), done: false, dueDate: toInputDate(new Date()) });
+function toggleContactAction(orgId, cid, aid) {
+  const org = getOrg(orgId), c = getContact(org, cid), a = getAction(c, aid);
+  if (a) a.done = !a.done;
   render();
 }
 
@@ -1480,8 +1537,8 @@ function convertSalonContactObj(sc) {
     owner: "Non assigné", stage: 0, interestLevel: "Moyen", problematiques: [],
     comments: `Contact capturé au salon JFR le ${fmtDate(sc.capturedAt)}.`,
     source: "Événements", createdAt: new Date(), isICP: false, loiSigned: false, loiValue: 0,
-    contacts: [{ id: nextId(), name: sc.name, role: sc.role, email: sc.email, phone: sc.phone, notes: sc.notes }],
-    devices: [], interactions: [{ id: nextId(), date: new Date(), type: "Note", label: "Lead créé à partir d'un contact capturé au salon JFR" }],
+    contacts: [{ id: nextId(), name: sc.name, role: sc.role, email: sc.email, phone: sc.phone, notes: sc.notes, photo: sc.photo || null, actions: [] }],
+    interactions: [{ id: nextId(), date: new Date(), type: "Note", label: "Lead créé à partir d'un contact capturé au salon JFR" }],
   };
   STATE.organizations.unshift(org);
   sc.convertedOrgId = org.id;
@@ -1575,13 +1632,30 @@ async function runOcr(file, dataUrl) {
   }
 }
 
+function extractEmail(text) {
+  const matches = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
+  return matches[0] || "";
+}
+function extractPhone(text) {
+  const matches = text.match(/(\+\d{1,3}[\s.-]?)?\(?\d{1,4}\)?([\s.-]?\d{2,4}){2,5}/g) || [];
+  for (const m of matches) {
+    const digits = m.replace(/\D/g, "");
+    if (digits.length >= 9 && digits.length <= 15) return m.trim();
+  }
+  return "";
+}
+
 function renderScanForm(rawText, dataUrl, errorMsg) {
-  const email = (rawText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/) || [""])[0];
-  const phone = (rawText.match(/(\+33|0)[\s.\-]?[1-9]([\s.\-]?\d{2}){4}/) || [""])[0];
+  const email = extractEmail(rawText);
+  const phone = extractPhone(rawText);
   const lines = rawText.split("\n").map(l => l.trim()).filter(Boolean);
   const orgKeywords = /(hôpital|hopital|chu|clinique|cabinet|centre|groupe|santé|sante|imagerie|radiologie)/i;
   const guessName = lines.find(l => !l.includes("@") && !orgKeywords.test(l) && !/\d{3,}/.test(l)) || "";
   const guessOrg = lines.find(l => orgKeywords.test(l)) || "";
+  // Lignes non assignées automatiquement à un champ dédié → conservées en commentaires.
+  const phoneDigits = phone.replace(/\D/g, "");
+  const leftover = lines.filter(l => l !== guessName && l !== guessOrg && !(email && l.includes(email)) && !(phoneDigits && l.replace(/\D/g, "").length >= 9 && l.replace(/\D/g, "") === phoneDigits));
+  const autoNotes = leftover.join("\n");
   window.__scanPhotoData = dataUrl;
 
   const el = document.getElementById("scan-result");
@@ -1596,7 +1670,7 @@ function renderScanForm(rawText, dataUrl, errorMsg) {
       <div class="field"><label>Téléphone</label><input id="scan-phone" value="${escapeHtml(phone)}" /></div>
     </div>
     <div class="field"><label>Rôle</label><select id="scan-role">${options(CONTACT_ROLES)}</select></div>
-    ${rawText ? `<div class="field"><label>Texte brut détecté (vérifier)</label><textarea id="scan-raw" readonly style="font-size:11px;color:var(--muted);min-height:70px;">${escapeHtml(rawText)}</textarea></div>` : ""}
+    <div class="field"><label>Commentaires ${leftover.length ? "(éléments non assignés automatiquement, à vérifier)" : ""}</label><textarea id="scan-notes" style="font-size:12.5px;">${escapeHtml(autoNotes)}</textarea></div>
     <label class="checkbox-item" style="width:100%;margin-bottom:14px;"><input type="checkbox" id="scan-create-org" checked/> Créer directement une fiche organisation associée</label>
     <div class="modal-actions">
       <button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
@@ -1611,9 +1685,10 @@ function confirmScanContact() {
   const email = document.getElementById("scan-email").value.trim();
   const phone = document.getElementById("scan-phone").value.trim();
   const role = document.getElementById("scan-role").value;
+  const notes = document.getElementById("scan-notes").value.trim();
   const createOrg = document.getElementById("scan-create-org").checked;
   const sc = {
-    id: nextId(), name, organization, role, email, phone, notes: "",
+    id: nextId(), name, organization, role, email, phone, notes,
     capturedVia: "OCR", capturedAt: new Date(), convertedOrgId: null, photo: window.__scanPhotoData || null,
   };
   STATE.salonContacts.unshift(sc);
@@ -1630,14 +1705,14 @@ function confirmScanContact() {
 function renderTopnav() {
   document.getElementById("topnav").innerHTML = `
     <button class="topnav-btn ${STATE.view.type === "home" ? "active" : ""}" data-action="nav-home">Accueil</button>
-    <button class="topnav-btn ${STATE.view.type === "list" || STATE.view.type === "detail" ? "active" : ""}" data-action="nav-list">Organisations</button>
+    <button class="topnav-btn ${STATE.view.type === "list" || STATE.view.type === "detail" || STATE.view.type === "contact" ? "active" : ""}" data-action="nav-list">Organisations</button>
     <button class="topnav-btn ${STATE.view.type === "salon" ? "active" : ""}" data-action="nav-salon">Salon JFR</button>
   `;
   const bar = document.getElementById("mobile-tabbar");
   if (bar) {
     const tabs = [
       { action: "nav-home", label: "Accueil", i: ICONS.home, active: STATE.view.type === "home" },
-      { action: "nav-list", label: "Organisations", i: ICONS.building, active: STATE.view.type === "list" || STATE.view.type === "detail" },
+      { action: "nav-list", label: "Organisations", i: ICONS.building, active: STATE.view.type === "list" || STATE.view.type === "detail" || STATE.view.type === "contact" },
       { action: "nav-salon", label: "Salon JFR", i: ICONS.camera, active: STATE.view.type === "salon" },
     ];
     bar.innerHTML = tabs.map(t => `<button class="mobile-tab-btn ${t.active ? "active" : ""}" data-action="${t.action}">${icon(t.i, 20)}<span>${t.label}</span></button>`).join("");
@@ -1650,8 +1725,10 @@ function render() {
   else if (STATE.view.type === "list") app.innerHTML = renderList();
   else if (STATE.view.type === "salon") app.innerHTML = renderSalon();
   else if (STATE.view.type === "detail") app.innerHTML = renderDetail(STATE.view.id, STATE.view.tab);
+  else if (STATE.view.type === "contact") app.innerHTML = renderContactDetail(STATE.view.id, STATE.view.cid);
   renderTopnav();
-  if (STATE.view.type === "detail" && STATE.view.tab === "commercial") setupTimelineDrag(STATE.view.id);
+  if (STATE.view.type === "detail" && STATE.view.tab === "commercial") setupTimelineDrag("org-" + STATE.view.id);
+  if (STATE.view.type === "contact") setupTimelineDrag("contact-" + STATE.view.cid);
 }
 
 document.addEventListener("click", (e) => {
@@ -1666,6 +1743,7 @@ document.addEventListener("click", (e) => {
   else if (action === "open-edit-salon") openEditSalonModal(id);
   else if (action === "convert-salon") convertSalonContact(id);
   else if (action === "view-org") { STATE.view = { type: "detail", id, tab: "commercial" }; render(); }
+  else if (action === "view-contact") { STATE.view = { type: "contact", id, cid: el.dataset.cid }; render(); }
   else if (action === "tab") { STATE.view = { type: "detail", id, tab: el.dataset.tab }; render(); }
   else if (action === "set-stage") { getOrg(id).stage = Number(el.dataset.stage); render(); }
   else if (action === "open-add-org") openAddOrgModal();
@@ -1674,8 +1752,8 @@ document.addEventListener("click", (e) => {
   else if (action === "open-edit-contact") openEditContactModal(id, el.dataset.cid);
   else if (action === "open-add-action") openAddActionModal(id);
   else if (action === "open-edit-action") openEditActionModal(id, el.dataset.iid);
-  else if (action === "open-add-device") openAddDeviceModal(id);
-  else if (action === "open-add-waitlist") openAddWaitlistModal();
+  else if (action === "open-add-contact-action") openAddContactActionModal(id, el.dataset.cid);
+  else if (action === "open-edit-contact-action") openEditContactAction(id, el.dataset.cid, el.dataset.iid);
   else if (action === "close-modal") closeModal();
   else if (action === "map-filter") { const s = Number(el.dataset.stage); STATE.homeFilter = STATE.homeFilter === s ? null : s; render(); }
   else if (action === "map-filter-clear") { STATE.homeFilter = null; render(); }
