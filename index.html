@@ -361,6 +361,7 @@ const STATE = {
   view: { type: "home" },
   homeFilter: null,
   filters: { search: "", stage: "all" },
+  contactFilters: { search: "", role: "all" },
   organizations: [
     {
       id: "1", name: "Centre de Santé Val-de-Loire", type: "Autre",
@@ -819,6 +820,56 @@ function renderList() {
               <td>${o.contacts.length}</td>
               <td style="text-align:right;color:var(--faint);">${icon('<path d="m9 18 6-6-6-6"/>', 15)}</td>
             </tr>`).join("") || `<tr><td colspan="5" class="empty-state">Aucune organisation ne correspond à ces filtres.</td></tr>`}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  `;
+}
+
+/* =========================================================================
+   RENDER — CONTACTS (tous les contacts, toutes organisations confondues)
+   ========================================================================= */
+
+function renderContactsList() {
+  const q = (STATE.contactFilters?.search || "").toLowerCase();
+  const roleFilter = STATE.contactFilters?.role ?? "all";
+  const allContacts = STATE.organizations.flatMap(o => o.contacts.map(c => ({ ...c, orgId: o.id, orgName: o.name, orgType: o.type })));
+  const rows = allContacts.filter(c =>
+    (roleFilter === "all" || c.role === roleFilter) &&
+    (c.name.toLowerCase().includes(q) || c.orgName.toLowerCase().includes(q) || (c.email || "").toLowerCase().includes(q))
+  );
+
+  return `
+    <div class="page-head">
+      <div><h1>Contacts</h1><div class="page-sub">${allContacts.length} contact${allContacts.length > 1 ? "s" : ""} au total, toutes organisations confondues</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" placeholder="Rechercher par nom, organisation ou email…" value="${escapeHtml(STATE.contactFilters?.search || "")}" oninput="STATE.contactFilters={...STATE.contactFilters, search:this.value}; render();" />
+      <select onchange="STATE.contactFilters={...STATE.contactFilters, role:this.value}; render();">
+        <option value="all" ${roleFilter === "all" ? "selected" : ""}>Tous les rôles</option>
+        ${CONTACT_ROLES.map(r => `<option value="${r}" ${roleFilter === r ? "selected" : ""}>${r}</option>`).join("")}
+      </select>
+    </div>
+
+    <div class="card" style="padding:0;">
+      <div style="overflow-x:auto;">
+      <table class="orglist">
+        <thead><tr><th>Contact</th><th>Rôle</th><th>Organisation</th><th>Coordonnées</th><th>Actions</th><th></th></tr></thead>
+        <tbody>
+          ${rows.map(c => {
+            const pending = c.actions.filter(a => !a.done).length;
+            return `
+            <tr data-action="view-contact" data-id="${c.orgId}" data-cid="${c.id}">
+              <td><div class="org-name">${c.name}${c.photo ? ` ${icon(ICONS.camera, 11)}` : ""}</div></td>
+              <td><span class="pill" style="${pillStyle("#8F9B94")}">${c.role}</span></td>
+              <td><a data-action="view-org" data-id="${c.orgId}" style="color:var(--teal-dark);cursor:pointer;">${c.orgName}</a><div class="org-region">${c.orgType}</div></td>
+              <td><div class="org-region" style="font-size:13px;color:var(--ink);">${c.email || "—"}</div><div class="org-region">${c.phone || ""}</div></td>
+              <td>${pending ? `<span class="pill" style="${pillStyle("#C1121F")}">${pending} à faire</span>` : `<span class="org-region">—</span>`}</td>
+              <td style="text-align:right;color:var(--faint);">${icon('<path d="m9 18 6-6-6-6"/>', 15)}</td>
+            </tr>`;
+          }).join("") || `<tr><td colspan="6" class="empty-state">Aucun contact ne correspond à ces filtres.</td></tr>`}
         </tbody>
       </table>
       </div>
@@ -1706,6 +1757,7 @@ function renderTopnav() {
   document.getElementById("topnav").innerHTML = `
     <button class="topnav-btn ${STATE.view.type === "home" ? "active" : ""}" data-action="nav-home">Accueil</button>
     <button class="topnav-btn ${STATE.view.type === "list" || STATE.view.type === "detail" || STATE.view.type === "contact" ? "active" : ""}" data-action="nav-list">Organisations</button>
+    <button class="topnav-btn ${STATE.view.type === "contacts" ? "active" : ""}" data-action="nav-contacts">Contacts</button>
     <button class="topnav-btn ${STATE.view.type === "salon" ? "active" : ""}" data-action="nav-salon">Salon JFR</button>
   `;
   const bar = document.getElementById("mobile-tabbar");
@@ -1713,6 +1765,7 @@ function renderTopnav() {
     const tabs = [
       { action: "nav-home", label: "Accueil", i: ICONS.home, active: STATE.view.type === "home" },
       { action: "nav-list", label: "Organisations", i: ICONS.building, active: STATE.view.type === "list" || STATE.view.type === "detail" || STATE.view.type === "contact" },
+      { action: "nav-contacts", label: "Contacts", i: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/>', active: STATE.view.type === "contacts" },
       { action: "nav-salon", label: "Salon JFR", i: ICONS.camera, active: STATE.view.type === "salon" },
     ];
     bar.innerHTML = tabs.map(t => `<button class="mobile-tab-btn ${t.active ? "active" : ""}" data-action="${t.action}">${icon(t.i, 20)}<span>${t.label}</span></button>`).join("");
@@ -1724,6 +1777,7 @@ function render() {
   try {
     if (STATE.view.type === "home") app.innerHTML = renderHome();
     else if (STATE.view.type === "list") app.innerHTML = renderList();
+    else if (STATE.view.type === "contacts") app.innerHTML = renderContactsList();
     else if (STATE.view.type === "salon") app.innerHTML = renderSalon();
     else if (STATE.view.type === "detail") app.innerHTML = renderDetail(STATE.view.id, STATE.view.tab);
     else if (STATE.view.type === "contact") app.innerHTML = renderContactDetail(STATE.view.id, STATE.view.cid);
@@ -1747,6 +1801,7 @@ document.addEventListener("click", (e) => {
   const action = el.dataset.action, id = el.dataset.id;
   if (action === "nav-home") { STATE.view = { type: "home" }; render(); }
   else if (action === "nav-list") { STATE.view = { type: "list" }; render(); }
+  else if (action === "nav-contacts") { STATE.view = { type: "contacts" }; render(); }
   else if (action === "nav-salon") { STATE.view = { type: "salon" }; render(); }
   else if (action === "open-scan-modal") openScanModal();
   else if (action === "open-add-salon-manual") openAddSalonManualModal();
