@@ -1721,11 +1721,21 @@ function renderTopnav() {
 
 function render() {
   const app = document.getElementById("app");
-  if (STATE.view.type === "home") app.innerHTML = renderHome();
-  else if (STATE.view.type === "list") app.innerHTML = renderList();
-  else if (STATE.view.type === "salon") app.innerHTML = renderSalon();
-  else if (STATE.view.type === "detail") app.innerHTML = renderDetail(STATE.view.id, STATE.view.tab);
-  else if (STATE.view.type === "contact") app.innerHTML = renderContactDetail(STATE.view.id, STATE.view.cid);
+  try {
+    if (STATE.view.type === "home") app.innerHTML = renderHome();
+    else if (STATE.view.type === "list") app.innerHTML = renderList();
+    else if (STATE.view.type === "salon") app.innerHTML = renderSalon();
+    else if (STATE.view.type === "detail") app.innerHTML = renderDetail(STATE.view.id, STATE.view.tab);
+    else if (STATE.view.type === "contact") app.innerHTML = renderContactDetail(STATE.view.id, STATE.view.cid);
+  } catch (err) {
+    console.error("Erreur de rendu :", err);
+    app.innerHTML = `
+      <div class="card" style="border-color:var(--raspberry);">
+        <div class="card-title" style="color:var(--raspberry);">Erreur d'affichage</div>
+        <p style="font-size:14px;color:var(--muted);">Une erreur est survenue en essayant d'afficher cette page (détail en console navigateur : F12).</p>
+        <button class="btn btn-secondary btn-sm" data-action="nav-home">Retour à l'accueil</button>
+      </div>`;
+  }
   renderTopnav();
   if (STATE.view.type === "detail" && STATE.view.tab === "commercial") setupTimelineDrag("org-" + STATE.view.id);
   if (STATE.view.type === "contact") setupTimelineDrag("contact-" + STATE.view.cid);
@@ -1797,6 +1807,40 @@ const workspaceDoc = () => fbDb.collection("crm").doc("workspace");
 
 function setSaveIndicator(text) { const el = document.getElementById("save-indicator"); if (el) el.textContent = text; }
 
+// Comble les champs manquants sur des données enregistrées avant l'ajout de
+// certaines fonctionnalités (ex. actions/photo par contact), pour éviter
+// tout plantage du rendu après mise à jour de l'application.
+function migrateState() {
+  if (!Array.isArray(STATE.organizations)) STATE.organizations = [];
+  STATE.organizations.forEach((o) => {
+    if (!Array.isArray(o.contacts)) o.contacts = [];
+    o.contacts.forEach((c) => {
+      if (!Array.isArray(c.actions)) c.actions = [];
+      if (c.photo === undefined) c.photo = null;
+      if (typeof c.notes !== "string") c.notes = "";
+      if (typeof c.email !== "string") c.email = "";
+      if (typeof c.phone !== "string") c.phone = "";
+    });
+    if (!Array.isArray(o.interactions)) o.interactions = [];
+    if (!Array.isArray(o.problematiques)) o.problematiques = [];
+    if (typeof o.isICP !== "boolean") o.isICP = false;
+    if (typeof o.loiSigned !== "boolean") o.loiSigned = false;
+    if (typeof o.loiValue !== "number") o.loiValue = 0;
+    if (!o.interestLevel) o.interestLevel = "Moyen";
+    if (!o.source) o.source = LEAD_SOURCES[0];
+    if (!(o.createdAt instanceof Date) || isNaN(o.createdAt)) o.createdAt = new Date();
+    if (typeof o.address !== "string") o.address = "";
+    if (typeof o.email !== "string") o.email = "";
+    if (typeof o.phone !== "string") o.phone = "";
+    if (typeof o.comments !== "string") o.comments = "";
+    delete o.devices; // fonctionnalité retirée
+  });
+  if (!Array.isArray(STATE.salonContacts)) STATE.salonContacts = [];
+  if (!Array.isArray(STATE.campaigns)) STATE.campaigns = [];
+  delete STATE.waitlist; // fonctionnalité retirée
+  delete STATE.tasks; // fonctionnalité retirée
+}
+
 async function loadStateFromFirestore() {
   if (!firebaseReady) return;
   try {
@@ -1807,6 +1851,7 @@ async function loadStateFromFirestore() {
       Object.assign(STATE, loaded);
       STATE.view = { type: "home" };
     }
+    migrateState();
     setSaveIndicator("Synchronisé");
   } catch (err) {
     console.error("Erreur de chargement Firestore :", err);
