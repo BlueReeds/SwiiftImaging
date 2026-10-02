@@ -44,6 +44,7 @@
   .btn-secondary:hover { background: #F5F4F0; }
   .btn-ghost { background: transparent; color: var(--muted); border: none; padding: 6px 8px; }
   .btn-sm { padding: 5px 10px; font-size: 13px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
 
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
   .card + .card { margin-top: 16px; }
@@ -134,6 +135,14 @@
   .scan-thumb img { max-width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); display: block; }
   .scan-status { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; font-family: "Inter", sans-serif; }
   .scan-error { font-size: 13px; color: var(--raspberry); background: rgba(193,18,31,.06); border: 1px solid rgba(193,18,31,.2); border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; font-family: "Inter", sans-serif; }
+  .attachment-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #EFEDE7; }
+  .attachment-row:first-child { border-top: none; padding-top: 0; }
+  .attachment-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); flex-shrink: 0; }
+  .attachment-icon { width: 40px; height: 40px; border-radius: 6px; background: #F1EFE8; display: flex; align-items: center; justify-content: center; color: var(--muted); flex-shrink: 0; }
+  .attachment-info { flex: 1; min-width: 0; }
+  .attachment-name { font-size: 13.5px; font-weight: 500; color: var(--ink); text-decoration: none; word-break: break-word; }
+  .attachment-name:hover { text-decoration: underline; }
+  .attachment-meta { font-size: 11.5px; color: var(--faint); font-family: "Inter", sans-serif; }
   .scan-source-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
   .scan-source-buttons label.btn { display: inline-flex; cursor: pointer; }
   .camera-wrap { position: relative; border-radius: 8px; overflow: hidden; background: #000; margin-bottom: 4px; }
@@ -302,7 +311,6 @@
     <div class="topnav" id="topnav"></div>
     <div class="topbar-right">
       <span class="save-indicator" id="save-indicator"></span>
-      <button class="btn btn-ghost btn-sm" id="save-now-btn" title="Enregistrer maintenant">Enregistrer</button>
       <button class="btn btn-secondary btn-sm" id="logout-btn">Déconnexion</button>
       <button class="btn btn-primary" id="add-org-btn" data-action="open-add-org">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -380,6 +388,86 @@ function findContactOwner(cid) {
   return null;
 }
 function isOverdue(a) { return !a.done && daysBetween(a.date, new Date()) > 0; }
+function formatBytes(n) { if (n < 1024) return n + " o"; if (n < 1024 * 1024) return Math.round(n / 1024) + " Ko"; return (n / (1024 * 1024)).toFixed(1) + " Mo"; }
+function estimateStateSizeBytes() { try { return new Blob([JSON.stringify(STATE)]).size; } catch (e) { return JSON.stringify(STATE).length; } }
+
+/* ---- Pièces jointes (photo, PDF, autre) — stockées en base64, limitées en taille ---- */
+const MAX_ATTACHMENT_BYTES = 1500000; // ~1,5 Mo : marge sous la limite de 1 Mo par document Firestore
+function handleAddAttachment(input, kind, orgId, cid) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > MAX_ATTACHMENT_BYTES) {
+    alert("Ce fichier est trop volumineux (max environ 1,5 Mo) — la sauvegarde en ligne a une limite de taille par enregistrement. Essayez un fichier plus léger ou compressé.");
+    input.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const att = { id: nextId(), name: file.name || "fichier", mime: file.type || "application/octet-stream", size: file.size, dataUrl: e.target.result, addedAt: new Date() };
+    const org = getOrg(orgId);
+    if (kind === "org") org.attachments.push(att);
+    else getContact(org, cid).attachments.push(att);
+    render();
+  };
+  reader.readAsDataURL(file);
+}
+function removeAttachment(kind, orgId, cid, attId) {
+  const org = getOrg(orgId);
+  if (kind === "org") org.attachments = org.attachments.filter((a) => a.id !== attId);
+  else { const c = getContact(org, cid); c.attachments = c.attachments.filter((a) => a.id !== attId); }
+  render();
+}
+function renderAttachmentsCard(items, kind, orgId, cid) {
+  const inputId = "att-input-" + kind + "-" + (cid || orgId);
+  return `
+    <section class="card">
+      <div class="section-head" style="margin-bottom:12px;">
+        <p class="card-title" style="margin:0;">Pièces jointes</p>
+        <label class="btn btn-ghost btn-sm" for="${inputId}" style="cursor:pointer;">${icon(ICONS.plus, 14)}</label>
+        <input id="${inputId}" type="file" style="display:none;" onchange="handleAddAttachment(this,'${kind}','${orgId}'${cid ? `,'${cid}'` : ",null"})" />
+      </div>
+      ${items.length ? items.map((a) => `
+        <div class="attachment-row">
+          ${a.mime && a.mime.startsWith("image/") ? `<img src="${a.dataUrl}" class="attachment-thumb" alt="" />` : `<div class="attachment-icon">${icon(ICONS.file, 18)}</div>`}
+          <div class="attachment-info">
+            <a href="${a.dataUrl}" download="${escapeHtml(a.name)}" class="attachment-name">${escapeHtml(a.name)}</a>
+            <div class="attachment-meta">${formatBytes(a.size)} · ${fmtDate(a.addedAt)}</div>
+          </div>
+          <button class="edit-icon-btn" onclick="removeAttachment('${kind}','${orgId}',${cid ? `'${cid}'` : "null"},'${a.id}')" title="Supprimer">${icon(ICONS.trash, 14)}</button>
+        </div>
+      `).join("") : `<div class="empty-state">Aucune pièce jointe.</div>`}
+    </section>
+  `;
+}
+
+/* ---- Export CSV (organisations / contacts) ---- */
+function toCsvValue(v) { const s = String(v ?? ""); return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function downloadCsv(filename, rows) {
+  const csv = rows.map((r) => r.map(toCsvValue).join(";")).join("\r\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function exportOrganizations() {
+  const header = ["Nom", "Type", "Adresse", "Email", "Téléphone", "Référent", "Source", "Niveau d'intérêt", "Étape", "Problématiques", "ICP", "LOI signée", "Valeur LOI (€)", "Commentaires", "Créée le"];
+  const rows = [header, ...STATE.organizations.map((o) => [
+    o.name, o.type, o.address, o.email, o.phone, o.owner, o.source, o.interestLevel, STAGES[o.stage],
+    (o.problematiques || []).join(", "), o.isICP ? "Oui" : "Non", o.loiSigned ? "Oui" : "Non", o.loiValue || 0,
+    o.comments, toInputDate(o.createdAt),
+  ])];
+  downloadCsv("organisations.csv", rows);
+}
+function exportContacts() {
+  const header = ["Nom", "Rôle", "Organisation", "Email", "Téléphone", "Source", "Niveau d'intérêt", "Référent chez Swiift", "Actions en attente", "Commentaires"];
+  const rows = [header];
+  STATE.organizations.forEach((o) => o.contacts.forEach((c) => {
+    rows.push([c.name, c.role, o.name, c.email, c.phone, c.source, c.interestLevel, c.referent, c.actions.filter((a) => !a.done).length, c.notes]);
+  }));
+  downloadCsv("contacts.csv", rows);
+}
 function fmtDate(d) { return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" }); }
 function icon(paths, size) { size = size || 14; return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`; }
 function options(list, selected) { return list.map(v => `<option value="${v}" ${v === selected ? "selected" : ""}>${v}</option>`).join(""); }
@@ -413,6 +501,10 @@ const ICONS = {
   edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
   home: '<path d="m3 9 9-7 9 7"/><path d="M9 22V12h6v10"/><path d="M21 9v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9"/>',
   camera: '<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z"/><circle cx="12" cy="13" r="4"/>',
+  trash: '<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+  download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
 };
 
 /* =========================================================================
@@ -689,6 +781,7 @@ function renderList() {
   return `
     <div class="page-head">
       <div><h1>Organisations</h1><div class="page-sub">${STATE.organizations.length} lead${STATE.organizations.length > 1 ? "s" : ""} / client${STATE.organizations.length > 1 ? "s" : ""} au total</div></div>
+      <button class="btn btn-secondary" onclick="exportOrganizations()">${icon(ICONS.download, 14)} Exporter (CSV)</button>
     </div>
 
     <div class="toolbar">
@@ -735,6 +828,7 @@ function renderContactsList() {
   return `
     <div class="page-head">
       <div><h1>Contacts</h1><div class="page-sub">${allContacts.length} contact${allContacts.length > 1 ? "s" : ""} au total, toutes organisations confondues</div></div>
+      <button class="btn btn-secondary" onclick="exportContacts()">${icon(ICONS.download, 14)} Exporter (CSV)</button>
     </div>
 
     <div class="toolbar">
@@ -766,6 +860,64 @@ function renderContactsList() {
         </tbody>
       </table>
       </div>
+    </div>
+  `;
+}
+
+/* =========================================================================
+   RENDER — ADMIN
+   ========================================================================= */
+
+function renderAdmin() {
+  const totalOrgs = STATE.organizations.length;
+  const totalContacts = STATE.organizations.reduce((s, o) => s + o.contacts.length, 0);
+  const totalAttachments = STATE.organizations.reduce((s, o) => s + (o.attachments?.length || 0) + o.contacts.reduce((s2, c) => s2 + (c.attachments?.length || 0), 0), 0);
+  const sizeBytes = estimateStateSizeBytes();
+  const sizePct = Math.min(100, Math.round((sizeBytes / 1048576) * 100));
+  const userEmail = firebaseReady && fbAuth.currentUser ? fbAuth.currentUser.email : null;
+
+  return `
+    <div class="page-head">
+      <div><h1>Administration</h1><div class="page-sub">Sauvegarde, export et réinitialisation des données de l'application.</div></div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi" style="--accent:#14C6C9;"><div class="kpi-label">Organisations</div><div class="kpi-value">${totalOrgs}</div></div>
+      <div class="kpi" style="--accent:#0E0E34;"><div class="kpi-label">Contacts</div><div class="kpi-value">${totalContacts}</div></div>
+      <div class="kpi" style="--accent:#8F9B94;"><div class="kpi-label">Pièces jointes</div><div class="kpi-value">${totalAttachments}</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Compte &amp; synchronisation</div>
+      <dl class="info-list">
+        <div class="row"><dt>Connecté en tant que</dt><dd>${userEmail ? escapeHtml(userEmail) : "Mode démo local — Firebase non configuré"}</dd></div>
+        <div class="row"><dt>Statut</dt><dd>${firebaseReady ? "Synchronisation Firestore active" : "Aucune sauvegarde en ligne"}</dd></div>
+      </dl>
+      ${firebaseReady ? `<div class="modal-actions" style="justify-content:flex-start;margin-top:14px;"><button class="btn btn-secondary btn-sm" onclick="saveStateToFirestore()">Enregistrer maintenant</button></div>` : ""}
+    </div>
+
+    <div class="card">
+      <div class="card-title">Occupation de l'espace de stockage</div>
+      <div class="funnel-row" style="margin-bottom:4px;">
+        <div class="funnel-track" style="height:14px;"><div class="funnel-fill" style="width:${sizePct}%; background:${sizePct > 80 ? "var(--raspberry)" : "var(--teal)"}; height:100%;"></div></div>
+        <div class="funnel-count" style="width:44px;">${sizePct}%</div>
+      </div>
+      <div class="map-caption">${formatBytes(sizeBytes)} utilisés sur la limite de 1 Mo par document Firestore. Les pièces jointes (photos, PDF) sont les premières responsables si ce chiffre grimpe.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Export des données</div>
+      <p style="font-size:14px;color:var(--muted);margin:0 0 12px;font-family:'Inter',sans-serif;">Fichier CSV compatible Excel, de l'ensemble des organisations ou des contacts actuellement enregistrés.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="exportOrganizations()">${icon(ICONS.download, 14)} Exporter les organisations</button>
+        <button class="btn btn-secondary" onclick="exportContacts()">${icon(ICONS.download, 14)} Exporter les contacts</button>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:rgba(193,18,31,.35);">
+      <div class="card-title" style="color:var(--raspberry);">Zone de danger</div>
+      <p style="font-size:14px;color:var(--muted);margin:0 0 12px;font-family:'Inter',sans-serif;">Supprime définitivement toutes les organisations, contacts, actions, pièces jointes et campagnes — y compris la sauvegarde en ligne. Action irréversible, à double confirmation.</p>
+      <button class="btn btn-primary" style="background:var(--raspberry);" data-action="open-reset-confirm">${icon(ICONS.trash, 14)} Réinitialiser toutes les données</button>
     </div>
   `;
 }
@@ -876,6 +1028,8 @@ function renderDetail(id, tab) {
           </dl>
         </section>
 
+        ${renderAttachmentsCard(org.attachments, "org", org.id, null)}
+
         <section class="card">
           <div class="section-head" style="margin-bottom:12px;">
             <p class="card-title" style="margin:0;">Contacts</p>
@@ -952,6 +1106,8 @@ function renderContactDetail(orgId, cid) {
             ${c.notes ? `<div class="row"><dt>Commentaires</dt><dd>${escapeHtml(c.notes)}</dd></div>` : ""}
           </dl>
         </section>
+
+        ${renderAttachmentsCard(c.attachments, "contact", org.id, c.id)}
       </aside>
 
       <main>
@@ -1083,6 +1239,40 @@ function openModal(html) {
 }
 function closeModal() { if (cameraStream) { cameraStream.getTracks().forEach((t) => t.stop()); cameraStream = null; } document.getElementById("modal-root").innerHTML = ""; }
 
+function openResetConfirmModal() {
+  openModal(`
+    <h2>Réinitialiser les données</h2>
+    <div class="modal-sub">Cette action supprime <strong>définitivement</strong> toutes les organisations, tous les contacts, actions, pièces jointes, campagnes et contacts du salon — y compris la sauvegarde en ligne si vous êtes connecté. Elle est irréversible.</div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button type="button" class="btn btn-primary" style="background:var(--raspberry);" onclick="openResetConfirmStep2()">Continuer</button>
+    </div>
+  `);
+}
+function openResetConfirmStep2() {
+  openModal(`
+    <h2>Confirmation finale</h2>
+    <div class="modal-sub">Pour confirmer la suppression définitive, tapez <strong>SUPPRIMER</strong> ci-dessous puis validez. Cette étape existe pour éviter toute suppression accidentelle.</div>
+    <div class="field"><input type="text" id="reset-confirm-input" placeholder="SUPPRIMER" autocomplete="off" oninput="document.getElementById('reset-confirm-btn').disabled = this.value.trim().toUpperCase() !== 'SUPPRIMER';" /></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+      <button type="button" class="btn btn-primary" id="reset-confirm-btn" style="background:var(--raspberry);" disabled onclick="confirmResetData()">Supprimer définitivement</button>
+    </div>
+  `);
+}
+async function confirmResetData() {
+  STATE.organizations = [];
+  STATE.salonContacts = [];
+  STATE.campaigns = [];
+  STATE.homeFilter = null;
+  STATE.filters = { search: "", stage: "all" };
+  STATE.contactFilters = { search: "", role: "all" };
+  STATE.view = { type: "home" };
+  closeModal();
+  render();
+  if (firebaseReady) { setSaveIndicator("Réinitialisation…"); await saveStateToFirestore(); }
+}
+
 function orgFormFields(org) {
   org = org || {};
   return `
@@ -1138,7 +1328,7 @@ function submitAddOrg(e) {
     interestLevel: f.interestLevel.value, problematiques: fd.getAll("problematiques"),
     source: f.source.value, isICP: fd.get("isICP") === "on", loiSigned: fd.get("loiSigned") === "on",
     loiValue: Number(f.loiValue.value) || 0, comments: f.comments.value.trim(),
-    createdAt: new Date(), contacts: [], devices: [], interactions: [],
+    createdAt: new Date(), contacts: [], interactions: [], attachments: [],
   };
   STATE.organizations.unshift(org);
   closeModal();
@@ -1215,7 +1405,7 @@ function submitAddContact(e, orgId) {
   org.contacts.push({
     id: nextId(), name: f.name.value.trim(), role: f.role.value, email: f.email.value.trim(), phone: f.phone.value.trim(),
     source: f.source.value, interestLevel: f.interestLevel.value, referent: f.referent.value.trim(),
-    notes: f.notes.value.trim(), photo: null, actions: [],
+    notes: f.notes.value.trim(), photo: null, actions: [], attachments: [],
   });
   closeModal(); render();
 }
@@ -1497,8 +1687,9 @@ function convertSalonContactObj(sc) {
     owner: "Non assigné", stage: 0, interestLevel: "Moyen", problematiques: [],
     comments: `Contact capturé au salon JFR le ${fmtDate(sc.capturedAt)}.`,
     source: "Événements", createdAt: new Date(), isICP: false, loiSigned: false, loiValue: 0,
-    contacts: [{ id: nextId(), name: sc.name, role: sc.role, email: sc.email, phone: sc.phone, notes: sc.notes, photo: sc.photo || null, actions: [], source: "Événements", interestLevel: "Moyen", referent: "" }],
+    contacts: [{ id: nextId(), name: sc.name, role: sc.role, email: sc.email, phone: sc.phone, notes: sc.notes, photo: sc.photo || null, actions: [], attachments: [], source: "Événements", interestLevel: "Moyen", referent: "" }],
     interactions: [{ id: nextId(), date: new Date(), type: "Note", label: "Lead créé à partir d'un contact capturé au salon JFR" }],
+    attachments: [],
   };
   STATE.organizations.unshift(org);
   sc.convertedOrgId = org.id;
@@ -1668,6 +1859,7 @@ function renderTopnav() {
     <button class="topnav-btn ${STATE.view.type === "list" || STATE.view.type === "detail" || STATE.view.type === "contact" ? "active" : ""}" data-action="nav-list">Organisations</button>
     <button class="topnav-btn ${STATE.view.type === "contacts" ? "active" : ""}" data-action="nav-contacts">Contacts</button>
     <button class="topnav-btn ${STATE.view.type === "salon" ? "active" : ""}" data-action="nav-salon">Salon JFR</button>
+    <button class="topnav-btn ${STATE.view.type === "admin" ? "active" : ""}" data-action="nav-admin">Admin</button>
   `;
   const bar = document.getElementById("mobile-tabbar");
   if (bar) {
@@ -1676,6 +1868,7 @@ function renderTopnav() {
       { action: "nav-list", label: "Organisations", i: ICONS.building, active: STATE.view.type === "list" || STATE.view.type === "detail" || STATE.view.type === "contact" },
       { action: "nav-contacts", label: "Contacts", i: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/>', active: STATE.view.type === "contacts" },
       { action: "nav-salon", label: "Salon JFR", i: ICONS.camera, active: STATE.view.type === "salon" },
+      { action: "nav-admin", label: "Admin", i: ICONS.settings, active: STATE.view.type === "admin" },
     ];
     bar.innerHTML = tabs.map(t => `<button class="mobile-tab-btn ${t.active ? "active" : ""}" data-action="${t.action}">${icon(t.i, 20)}<span>${t.label}</span></button>`).join("");
   }
@@ -1688,6 +1881,7 @@ function render() {
     else if (STATE.view.type === "list") app.innerHTML = renderList();
     else if (STATE.view.type === "contacts") app.innerHTML = renderContactsList();
     else if (STATE.view.type === "salon") app.innerHTML = renderSalon();
+    else if (STATE.view.type === "admin") app.innerHTML = renderAdmin();
     else if (STATE.view.type === "detail") app.innerHTML = renderDetail(STATE.view.id, STATE.view.tab);
     else if (STATE.view.type === "contact") app.innerHTML = renderContactDetail(STATE.view.id, STATE.view.cid);
   } catch (err) {
@@ -1712,6 +1906,7 @@ document.addEventListener("click", (e) => {
   else if (action === "nav-list") { STATE.view = { type: "list" }; render(); }
   else if (action === "nav-contacts") { STATE.view = { type: "contacts" }; render(); }
   else if (action === "nav-salon") { STATE.view = { type: "salon" }; render(); }
+  else if (action === "nav-admin") { STATE.view = { type: "admin" }; render(); }
   else if (action === "open-scan-modal") openScanModal();
   else if (action === "open-add-salon-manual") openAddSalonManualModal();
   else if (action === "open-edit-salon") openEditSalonModal(id);
@@ -1728,6 +1923,7 @@ document.addEventListener("click", (e) => {
   else if (action === "open-edit-action") openEditActionModal(id, el.dataset.iid);
   else if (action === "open-add-contact-action") openAddContactActionModal(id, el.dataset.cid);
   else if (action === "open-edit-contact-action") openEditContactAction(id, el.dataset.cid, el.dataset.iid);
+  else if (action === "open-reset-confirm") openResetConfirmModal();
   else if (action === "close-modal") closeModal();
   else if (action === "map-filter") { const s = Number(el.dataset.stage); STATE.homeFilter = STATE.homeFilter === s ? null : s; render(); }
   else if (action === "map-filter-clear") { STATE.homeFilter = null; render(); }
@@ -1787,7 +1983,9 @@ function migrateState() {
       if (!c.source) c.source = "Autre";
       if (!c.interestLevel) c.interestLevel = "Moyen";
       if (typeof c.referent !== "string") c.referent = "";
+      if (!Array.isArray(c.attachments)) c.attachments = [];
     });
+    if (!Array.isArray(o.attachments)) o.attachments = [];
     if (!Array.isArray(o.interactions)) o.interactions = [];
     if (!Array.isArray(o.problematiques)) o.problematiques = [];
     if (typeof o.isICP !== "boolean") o.isICP = false;
@@ -1838,7 +2036,7 @@ async function saveStateToFirestore() {
 // Sauvegarde automatique toutes les 8 secondes, à la fermeture de l'onglet, et à la demande.
 window.addEventListener("beforeunload", () => { if (firebaseReady) saveStateToFirestore(); });
 setInterval(() => { if (firebaseReady) saveStateToFirestore(); }, 8000);
-document.getElementById("save-now-btn").addEventListener("click", () => saveStateToFirestore());
+
 
 function showApp() { document.getElementById("login-screen").style.display = "none"; document.getElementById("app-root").style.display = ""; }
 function showLogin(message) {
