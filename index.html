@@ -362,118 +362,9 @@ const STATE = {
   homeFilter: null,
   filters: { search: "", stage: "all" },
   contactFilters: { search: "", role: "all" },
-  organizations: [
-    {
-      id: "1", name: "Centre de Santé Val-de-Loire", type: "Autre",
-      address: "12 rue des Tilleuls, 41000 Blois", email: "contact@cs-valdeloire.fr", phone: "02 54 00 00 00",
-      owner: "Camille Rousseau", stage: 4, interestLevel: "Élevé", problematiques: ["Désert médical"],
-      comments: "Structure pilote très engagée, bon relais pour d'autres centres du département.",
-      source: "Prospection LinkedIn", createdAt: daysAgo(70), isICP: true, loiSigned: true, loiValue: 18000,
-      contacts: [
-        { id: "c1", name: "Dr. Anne Lefèvre", role: "Échographiste", email: "a.lefevre@cs-valdeloire.fr", phone: "02 54 00 00 01", notes: "Très à l'aise avec la sonde abdominale, demande une formation complémentaire sur la sonde cardiaque.", photo: null, actions: [] },
-        { id: "c2", name: "Marc Thibault", role: "Manipulateur", email: "m.thibault@cs-valdeloire.fr", phone: "02 54 00 00 02", notes: "", photo: null, actions: [
-          { id: "a1", type: "Appel", label: "Relancer pour planifier la formation sonde cardiaque", date: daysAgo(-3), responsable: "Camille Rousseau", done: false },
-        ] },
-        { id: "c3", name: "Sophie Nguyen", role: "Décisionnaire", email: "s.nguyen@cs-valdeloire.fr", phone: "02 54 00 00 03", notes: "Responsable budget — point trimestriel à prévoir.", photo: null, actions: [
-          { id: "a2", type: "RDV qualification", label: "Point budgétaire trimestriel réalisé", date: daysAgo(5), responsable: "Camille Rousseau", done: true },
-        ] },
-      ],
-      interactions: [
-        { id: "i1", date: daysAgo(1), type: "Note", label: "Échographie abdominale réalisée — Dr. Lefèvre" },
-        { id: "i2", date: daysAgo(7), type: "Appel", label: "Signalement d'un flux vidéo instable, transmis à l'équipe technique" },
-        { id: "i3", date: daysAgo(12), type: "Appel", label: "Appel de suivi post-déploiement" },
-        { id: "i5", date: daysAgo(40), type: "Démo", label: "Démonstration sur site avant déploiement" },
-      ],
-    },
-    {
-      id: "2", name: "Hôpital Général de Riom", type: "CH",
-      address: "1 rue de la République, 63200 Riom", email: "secretariat@ch-riom.fr", phone: "04 73 00 00 00",
-      owner: "Camille Rousseau", stage: 2, interestLevel: "Moyen", problematiques: ["Augmentation d'activité"],
-      comments: "", source: "Page d'atterrissage", createdAt: daysAgo(10), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c4", name: "Dr. Karim Belhadj", role: "Décisionnaire", email: "k.belhadj@ch-riom.fr", phone: "", notes: "", photo: null, actions: [
-        { id: "a3", type: "Appel", label: "Relancer après le RDV de découverte", date: daysAgo(-2), responsable: "Camille Rousseau", done: false },
-      ] } ],
-      interactions: [ { id: "i6", date: daysAgo(4), type: "RDV qualification", label: "Appel de découverte réalisé avec Dr. Belhadj" } ],
-    },
-    {
-      id: "3", name: "Cabinet Médical des Trois Vallées", type: "Cabinet libéral",
-      address: "3 place de la Mairie, 05000 Gap", email: "contact@cabinet3v.fr", phone: "04 92 00 00 00",
-      owner: "Julien Kaced", stage: 4, interestLevel: "Élevé", problematiques: ["Désert médical"],
-      comments: "Client de référence — accepte volontiers de témoigner auprès d'autres cabinets.",
-      source: "Réseau", createdAt: daysAgo(95), isICP: true, loiSigned: true, loiValue: 9000,
-      contacts: [
-        { id: "c5", name: "Dr. Laura Petit", role: "Échographiste", email: "l.petit@cabinet3v.fr", phone: "", notes: "Réalise en moyenne 5 sessions/semaine.", photo: null, actions: [] },
-        { id: "c6", name: "Yohan Reyes", role: "Manipulateur", email: "y.reyes@cabinet3v.fr", phone: "", notes: "", photo: null, actions: [] },
-      ],
-      interactions: [ { id: "i7", date: daysAgo(1), type: "Note", label: "Échographie réalisée — Dr. Petit" }, { id: "i8", date: daysAgo(60), type: "Visite site", label: "Installation et formation initiale" } ],
-    },
-    {
-      id: "4", name: "Clinique du Parc", type: "Clinique", address: "5 avenue Foch, 69003 Lyon",
-      email: "", phone: "", owner: "Julien Kaced", stage: 0, interestLevel: "Faible", problematiques: [],
-      comments: "", source: "Formulaire liste d'attente", createdAt: daysAgo(3), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c7", name: "Dr. Elsa Marchand", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [] } ],
-      interactions: [ { id: "i9", date: daysAgo(3), type: "Note", label: "Lead créé via le formulaire liste d'attente" } ],
-    },
-    {
-      id: "5", name: "Maison de Santé Nord Ardèche", type: "Autre", address: "8 rue du Temple, 07000 Privas",
-      email: "", phone: "", owner: "Camille Rousseau", stage: 1, interestLevel: "Moyen", problematiques: ["Désert médical"],
-      comments: "", source: "Événements", createdAt: daysAgo(18), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c8", name: "Nadia Fontaine", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [] } ],
-      interactions: [ { id: "i10", date: daysAgo(9), type: "RDV qualification", label: "Échange téléphonique de qualification" } ],
-    },
-    {
-      id: "6", name: "CHU de Grenoble — Service Imagerie", type: "CHU", address: "CS 10217, 38000 Grenoble",
-      email: "", phone: "", owner: "Julien Kaced", stage: 3, interestLevel: "Élevé", problematiques: ["Augmentation d'activité"],
-      comments: "Profil ICP fort — service très demandeur, décision attendue avant fin de trimestre.",
-      source: "Prospection LinkedIn", createdAt: daysAgo(25), isICP: true, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c9", name: "Pr. Damien Roques", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [
-        { id: "a4", type: "Email", label: "Envoyer le questionnaire ICP", date: daysAgo(2), responsable: "Julien Kaced", done: false },
-      ] } ],
-      interactions: [
-        { id: "i11", date: daysAgo(15), type: "RDV qualification", label: "RDV de découverte avec la direction imagerie" },
-        { id: "i12", date: daysAgo(25), type: "Note", label: "Lead créé via campagne LinkedIn" },
-      ],
-    },
-    {
-      id: "7", name: "Cabinet Radiologie Sud", type: "Cabinet libéral", address: "22 cours Mirabeau, 13100 Aix-en-Provence",
-      email: "", phone: "", owner: "Julien Kaced", stage: 1, interestLevel: "Faible", problematiques: [],
-      comments: "", source: "Réseau", createdAt: daysAgo(45), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c10", name: "Dr. Farid Cheikh", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [] } ],
-      interactions: [ { id: "i13", date: daysAgo(40), type: "Note", label: "Lead créé via recommandation" } ],
-    },
-    {
-      id: "8", name: "Centre Médical Littoral", type: "Clinique", address: "14 quai de la Fosse, 44000 Nantes",
-      email: "", phone: "", owner: "Camille Rousseau", stage: 0, interestLevel: "Faible", problematiques: [],
-      comments: "", source: "Page d'atterrissage", createdAt: daysAgo(2), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [], interactions: [ { id: "i14", date: daysAgo(2), type: "Note", label: "Lead créé via la page d'atterrissage" } ],
-    },
-    {
-      id: "9", name: "Polyclinique de l'Estuaire", type: "Clinique", address: "40 cours de l'Intendance, 33000 Bordeaux",
-      email: "", phone: "", owner: "Camille Rousseau", stage: 0, interestLevel: "Moyen", problematiques: [],
-      comments: "", source: "Formulaire liste d'attente", createdAt: daysAgo(6), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c11", name: "Dr. Hélène Vasseur", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [
-        { id: "a5", type: "Appel", label: "Qualifier le besoin suite à l'inscription liste d'attente", date: daysAgo(-5), responsable: "Camille Rousseau", done: false },
-      ] } ],
-      interactions: [ { id: "i15", date: daysAgo(6), type: "Note", label: "Inscription formulaire liste d'attente" } ],
-    },
-    {
-      id: "10", name: "Maison Médicale des Cévennes", type: "Autre", address: "2 rue Fresque, 30000 Nîmes",
-      email: "", phone: "", owner: "Julien Kaced", stage: 1, interestLevel: "Moyen", problematiques: ["Désert médical"],
-      comments: "", source: "Événements", createdAt: daysAgo(30), isICP: false, loiSigned: false, loiValue: 0,
-      contacts: [ { id: "c12", name: "Dr. Paul Serrurier", role: "Décisionnaire", email: "", phone: "", notes: "", photo: null, actions: [] } ],
-      interactions: [ { id: "i16", date: daysAgo(28), type: "Note", label: "Rencontré au salon SantExpo" } ],
-    },
-  ],
-  campaigns: [
-    { id: "cp1", name: "Séquence prospection LinkedIn — radiologues", sent: 180, opened: 97, replied: 14 },
-    { id: "cp2", name: "Newsletter pré-lancement #3", sent: 420, opened: 151, replied: 9 },
-    { id: "cp3", name: "Cold email — déserts médicaux", sent: 95, opened: 41, replied: 11 },
-  ],
-  salonContacts: [
-    { id: "sc1", name: "Dr. Elodie Vasseur", role: "Échographiste", organization: "CHU de Nantes", email: "e.vasseur@chu-nantes.fr", phone: "02 40 00 00 00", notes: "Très intéressée par la téléradiologie en désert médical.", capturedVia: "Manuel", capturedAt: daysAgo(2), convertedOrgId: null, photo: null },
-    { id: "sc2", name: "Marc Oliveira", role: "Manipulateur", organization: "Clinique Saint-Jean", email: "m.oliveira@clinique-stjean.fr", phone: "", notes: "", capturedVia: "OCR", capturedAt: daysAgo(2), convertedOrgId: null, photo: null },
-    { id: "sc3", name: "Dr. Paul Lemoine", role: "Décisionnaire", organization: "Groupe Hospitalier Val d'Oise", email: "p.lemoine@gh-vo.fr", phone: "01 00 00 00 00", notes: "Demande un devis sous 2 semaines.", capturedVia: "Manuel", capturedAt: daysAgo(1), convertedOrgId: null, photo: null },
-  ],
+  organizations: [],
+  campaigns: [],
+  salonContacts: [],
 };
 
 /* =========================================================================
@@ -722,6 +613,7 @@ function renderHome() {
 
     <div class="section-title">Engagement contenu <span class="hint">séquences &amp; newsletter</span></div>
     <div class="card">
+      ${STATE.campaigns.length ? `
       <table class="campaigns">
         <thead><tr><th>Campagne</th><th>Envoyés</th><th>Taux d'ouverture</th><th>Taux de réponse</th></tr></thead>
         <tbody>
@@ -734,7 +626,7 @@ function renderHome() {
             </tr>
           `).join("")}
         </tbody>
-      </table>
+      </table>` : `<div class="empty-state">Aucune campagne enregistrée pour le moment.</div>`}
     </div>
 
     <div class="section-title">Organisations <span class="hint">répartition par type &amp; géographie</span></div>
@@ -856,7 +748,7 @@ function renderContactsList() {
     <div class="card" style="padding:0;">
       <div style="overflow-x:auto;">
       <table class="orglist">
-        <thead><tr><th>Contact</th><th>Rôle</th><th>Organisation</th><th>Coordonnées</th><th>Actions</th><th></th></tr></thead>
+        <thead><tr><th>Contact</th><th>Rôle</th><th>Organisation</th><th>Coordonnées</th><th>Intérêt</th><th>Actions</th><th></th></tr></thead>
         <tbody>
           ${rows.map(c => {
             const pending = c.actions.filter(a => !a.done).length;
@@ -866,10 +758,11 @@ function renderContactsList() {
               <td><span class="pill" style="${pillStyle("#8F9B94")}">${c.role}</span></td>
               <td><a data-action="view-org" data-id="${c.orgId}" style="color:var(--teal-dark);cursor:pointer;">${c.orgName}</a><div class="org-region">${c.orgType}</div></td>
               <td><div class="org-region" style="font-size:13px;color:var(--ink);">${c.email || "—"}</div><div class="org-region">${c.phone || ""}</div></td>
+              <td><span class="pill" style="${pillStyle(interestColor(c.interestLevel))}">${c.interestLevel || "—"}</span></td>
               <td>${pending ? `<span class="pill" style="${pillStyle("#C1121F")}">${pending} à faire</span>` : `<span class="org-region">—</span>`}</td>
               <td style="text-align:right;color:var(--faint);">${icon('<path d="m9 18 6-6-6-6"/>', 15)}</td>
             </tr>`;
-          }).join("") || `<tr><td colspan="6" class="empty-state">Aucun contact ne correspond à ces filtres.</td></tr>`}
+          }).join("") || `<tr><td colspan="7" class="empty-state">Aucun contact ne correspond à ces filtres.</td></tr>`}
         </tbody>
       </table>
       </div>
@@ -1053,6 +946,9 @@ function renderContactDetail(orgId, cid) {
             <div class="row"><dt>Email</dt><dd>${c.email || "—"}</dd></div>
             <div class="row"><dt>Téléphone</dt><dd>${c.phone || "—"}</dd></div>
             <div class="row"><dt>Organisation</dt><dd><a data-action="view-org" data-id="${org.id}" style="color:var(--teal-dark);cursor:pointer;">${org.name}</a></dd></div>
+            <div class="row"><dt>Source (lead origin)</dt><dd>${c.source || "—"}</dd></div>
+            <div class="row"><dt>Niveau d'intérêt</dt><dd><span class="pill" style="${pillStyle(interestColor(c.interestLevel))}">${c.interestLevel || "—"}</span></dd></div>
+            <div class="row"><dt>Référent chez Swiift</dt><dd>${c.referent || "—"}</dd></div>
             ${c.notes ? `<div class="row"><dt>Commentaires</dt><dd>${escapeHtml(c.notes)}</dd></div>` : ""}
           </dl>
         </section>
@@ -1283,17 +1179,29 @@ function submitEditOrg(e, orgId) {
   closeModal(); render();
 }
 
+function contactFormFields(c) {
+  c = c || {};
+  return `
+    <div class="field"><label>Nom complet</label><input name="name" required value="${escapeHtml(c.name || "")}" placeholder="Ex. Dr. Julie Marin" /></div>
+    <div class="field"><label>Rôle</label><select name="role">${options(CONTACT_ROLES, c.role)}</select></div>
+    <div class="field-row">
+      <div class="field"><label>Email</label><input name="email" type="email" value="${escapeHtml(c.email || "")}" placeholder="prenom.nom@structure.fr" /></div>
+      <div class="field"><label>Téléphone</label><input name="phone" type="tel" value="${escapeHtml(c.phone || "")}" placeholder="06 00 00 00 00" /></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Source (lead origin)</label><select name="source">${options(LEAD_SOURCES, c.source)}</select></div>
+      <div class="field"><label>Niveau d'intérêt</label><select name="interestLevel">${options(NIVEAUX_INTERET, c.interestLevel)}</select></div>
+    </div>
+    <div class="field"><label>Référent chez Swiift</label><input name="referent" value="${escapeHtml(c.referent || "")}" placeholder="Ex. Camille Rousseau" /></div>
+    <div class="field"><label>Commentaires / pratique</label><textarea name="notes" placeholder="Détails sur la pratique du contact, préférences, points d'attention...">${escapeHtml(c.notes || "")}</textarea></div>
+  `;
+}
+
 function openAddContactModal(orgId) {
   openModal(`
     <h2>Ajouter un contact</h2>
     <form onsubmit="submitAddContact(event, '${orgId}')">
-      <div class="field"><label>Nom complet</label><input name="name" required placeholder="Ex. Dr. Julie Marin" /></div>
-      <div class="field"><label>Rôle</label><select name="role">${options(CONTACT_ROLES)}</select></div>
-      <div class="field-row">
-        <div class="field"><label>Email</label><input name="email" type="email" placeholder="prenom.nom@structure.fr" /></div>
-        <div class="field"><label>Téléphone</label><input name="phone" type="tel" placeholder="06 00 00 00 00" /></div>
-      </div>
-      <div class="field"><label>Commentaires / pratique</label><textarea name="notes" placeholder="Détails sur la pratique du contact, préférences, points d'attention..."></textarea></div>
+      ${contactFormFields({ source: LEAD_SOURCES[0], interestLevel: "Moyen" })}
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
         <button type="submit" class="btn btn-primary">Ajouter</button>
@@ -1304,7 +1212,11 @@ function openAddContactModal(orgId) {
 function submitAddContact(e, orgId) {
   e.preventDefault();
   const f = e.target, org = getOrg(orgId);
-  org.contacts.push({ id: nextId(), name: f.name.value.trim(), role: f.role.value, email: f.email.value.trim(), phone: f.phone.value.trim(), notes: f.notes.value.trim(), photo: null, actions: [] });
+  org.contacts.push({
+    id: nextId(), name: f.name.value.trim(), role: f.role.value, email: f.email.value.trim(), phone: f.phone.value.trim(),
+    source: f.source.value, interestLevel: f.interestLevel.value, referent: f.referent.value.trim(),
+    notes: f.notes.value.trim(), photo: null, actions: [],
+  });
   closeModal(); render();
 }
 
@@ -1313,13 +1225,7 @@ function openEditContactModal(orgId, cid) {
   openModal(`
     <h2>Modifier le contact</h2>
     <form onsubmit="submitEditContact(event, '${orgId}', '${cid}')">
-      <div class="field"><label>Nom complet</label><input name="name" required value="${escapeHtml(c.name)}" /></div>
-      <div class="field"><label>Rôle</label><select name="role">${options(CONTACT_ROLES, c.role)}</select></div>
-      <div class="field-row">
-        <div class="field"><label>Email</label><input name="email" type="email" value="${escapeHtml(c.email || "")}" /></div>
-        <div class="field"><label>Téléphone</label><input name="phone" type="tel" value="${escapeHtml(c.phone || "")}" /></div>
-      </div>
-      <div class="field"><label>Commentaires / pratique</label><textarea name="notes">${escapeHtml(c.notes || "")}</textarea></div>
+      ${contactFormFields(c)}
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" onclick="closeModal()">Annuler</button>
         <button type="submit" class="btn btn-primary">Enregistrer</button>
@@ -1334,6 +1240,9 @@ function submitEditContact(e, orgId, cid) {
   c.role = f.role.value;
   c.email = f.email.value.trim();
   c.phone = f.phone.value.trim();
+  c.source = f.source.value;
+  c.interestLevel = f.interestLevel.value;
+  c.referent = f.referent.value.trim();
   c.notes = f.notes.value.trim();
   closeModal(); render();
 }
@@ -1588,7 +1497,7 @@ function convertSalonContactObj(sc) {
     owner: "Non assigné", stage: 0, interestLevel: "Moyen", problematiques: [],
     comments: `Contact capturé au salon JFR le ${fmtDate(sc.capturedAt)}.`,
     source: "Événements", createdAt: new Date(), isICP: false, loiSigned: false, loiValue: 0,
-    contacts: [{ id: nextId(), name: sc.name, role: sc.role, email: sc.email, phone: sc.phone, notes: sc.notes, photo: sc.photo || null, actions: [] }],
+    contacts: [{ id: nextId(), name: sc.name, role: sc.role, email: sc.email, phone: sc.phone, notes: sc.notes, photo: sc.photo || null, actions: [], source: "Événements", interestLevel: "Moyen", referent: "" }],
     interactions: [{ id: nextId(), date: new Date(), type: "Note", label: "Lead créé à partir d'un contact capturé au salon JFR" }],
   };
   STATE.organizations.unshift(org);
@@ -1875,6 +1784,9 @@ function migrateState() {
       if (typeof c.notes !== "string") c.notes = "";
       if (typeof c.email !== "string") c.email = "";
       if (typeof c.phone !== "string") c.phone = "";
+      if (!c.source) c.source = "Autre";
+      if (!c.interestLevel) c.interestLevel = "Moyen";
+      if (typeof c.referent !== "string") c.referent = "";
     });
     if (!Array.isArray(o.interactions)) o.interactions = [];
     if (!Array.isArray(o.problematiques)) o.problematiques = [];
